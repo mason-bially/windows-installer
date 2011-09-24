@@ -1,0 +1,8 @@
+Goals For Redmond App Manager:
+	-Find Installed version of program
+	-Find Latest version of program on web
+	-Download Latest version of program
+	-Install program
+	-Upgrade program
+	-Uninstall Program
+	-Handle Dependencies correctly

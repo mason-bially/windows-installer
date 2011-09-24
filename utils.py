@@ -81,20 +81,20 @@ def scrapePage(reg, url, pos=0):
     else:
         return ret
 
-def scrapePageDict(d):
-    """Scrapes the page from d['url'] for the d['regex'] at position 
-    d['regexpos'].
+def scrapePage(regx, url, regxpos):
+    """Scrapes the page from url for the regex at position 
+    regexpos.
 
-    This will return the d['regexpos']'th match of the regular expression
-    d['regex'] from the page at d['url'].
-
-    @param d A dictionary that contains 'regex' The regular expression to match.
-    'url' The page to scrape.
-    'regexpos' Which regular expression match to return, defaults to 0.
+    This will return the regexpos'th match of the regular expression
+    regex from the page at url.
+	
+	@param regx A regular expression to match
+	@param url The page to search for regx
+	@param regxpos Which regular expression instance to max, defaults to 0
     @return The regexpos'th reg match on the page at url.
     """
     try:
-        ret = re.findall(d['regex'], getPage(d['url']))[d['regexpos']]
+        ret = re.findall(regex, getPage(url)[regxpos]
     except TypeError as strerror:
         if strerror == 'first argument must be a string or compiled pattern':
             print 'you are missing or have an invalid regex in %s' %d
