@@ -63,6 +63,10 @@ class Package:
 		"""Uninstalls a program"""
 		print "Sorry This appears to be a stub"
 		
+		def name(self):
+			"""Returns the name of the package"""
+			return self.programName
+
 	def __str__(self):
 		prettyStr = "Package Name: " + self.__class__.__name__ + '\n'
 		prettyStr += "Program Name: " + self.programName
