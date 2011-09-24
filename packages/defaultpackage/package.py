@@ -5,7 +5,6 @@
 
 import utils
 import ConfigParser
-from os import getcwd
 
 
 class Package:
@@ -20,10 +19,13 @@ class Package:
 		self.regexpos = 0
 		self.downloadURL = "" #Web Dir to search for file
 		self.downloadRegx = "" #File to search for
-		self.latestVersion = ""
-		self.currentVersion = ""
+		self.latestVersion = "" #Latest verison online
+		self.currentVersion = "" #currently installed version
 		self.dependencies = []
 		self.installed = 0
+		self.readConfig()
+		self.findLatestVersion()
+		self.findVersionLocal()
 		
 	def readConfig(self):
 		"""Reads the configuration file
@@ -50,12 +52,24 @@ class Package:
 			raise
 		else:
 			return ret
-	
-	def install(self):
+	def download(self):
+		"""Downloads the latest version of a program"""
+		print "Sorry this appears to be a stub"
+	def install(self, quiet):
 		"""Installs the latest version of a program"""
 		print "Sorry This appears to be a stub"
 		
 	def uninstall(self):
 		"""Uninstalls a program"""
 		print "Sorry This appears to be a stub"
+		
+	def __str__(self):
+		prettyStr = "Package Name: " + self.__class__.__name__ + '\n'
+		prettyStr += "Program Name: " + self.programName
+		prettyStr += "Program Version Latest: " + self.latestVersion + "\n"
+		prettyStr += "Program Version Installed: " + self.currentVersion + "\n"
+		return prettyStr
+		
+	def runTest(self):
+		print "This appears to be a stub"
 		
