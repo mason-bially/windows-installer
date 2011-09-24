@@ -81,39 +81,8 @@ def scrapePage(reg, url, pos=0):
     else:
         return ret
 
-def scrapePage(regx, url, regxpos):
-    """Scrapes the page from url for the regex at position 
-    regexpos.
 
-    This will return the regexpos'th match of the regular expression
-    regex from the page at url.
-	
-	@param regx A regular expression to match
-	@param url The page to search for regx
-	@param regxpos Which regular expression instance to max, defaults to 0
-    @return The regexpos'th reg match on the page at url.
-    """
-    try:
-        ret = re.findall(regex, getPage(url))[regxpos]
-    except TypeError as strerror:
-        if strerror == 'first argument must be a string or compiled pattern':
-            print 'you are missing or have an invalid regex in %s' %d
-        elif strerror == 'expected string or buffer':
-            print 'your have no page being returned by getPage()'
-        print 'when calling scrapePageDict(%s)' %d
-    except IndexError:
-        print 'regexpos entry larger then the number of results mathing regex '
-        print 'when calling scrapePageDict(%s)' %d
-    except KeyError as strerror:
-        print 'd did not contain a "%s" entry' % strerror
-        print 'when calling scrapePage(%s)' %d
-    except:
-        print 'unknown error running scrapePage(%s)' % d
-        raise
-    else:
-        return ret
-
-def getWebVersion(d):
+def getWebVersion(url, regex, regexpos):
     """Get the version from the web of the catalog entry in d
 
     Use the page at the url specified in d['version']['url'], and the regular
@@ -128,12 +97,12 @@ def getWebVersion(d):
     passed in.
     """
     try:
-        ret = scrapePageDict(d['version'])
+        ret = scrapePage(regex, url, regexpos)
     except KeyError:
         print 'd did not contain a "version" entry'
-        print 'when calling getWebVersion(%s)' %d
+        print 'when calling getWebVersion()'
     except:
-        print 'unknown error running getWebVersion(%s)' % d
+        print 'unknown error running getWebVersion()'
         raise
     else:
         return ret
@@ -154,7 +123,7 @@ def getDownloadURL(d):
     """
     try:
         expandedVersion=expandVersion(d)
-        downurl = scrapePageDict(expandedVersion['download'])
+        downurl = scrapePage(expandedVersion['download'])
         fredirectedurl = urllib2.urlopen(downurl)
         redirectedurl = fredirectedurl.geturl()
         fredirectedurl .close()

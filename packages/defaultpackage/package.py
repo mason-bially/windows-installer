@@ -5,8 +5,10 @@
 
 import utils
 import ConfigParser
+from os import getcwd
 
-class package:
+
+class Package:
 	"""A Base class to be used as a starting point for every package
 	It implements the default functions for finding the latest version
 	of a program, install, uninstall etc."""
@@ -14,8 +16,8 @@ class package:
 	def __init__(self):
 		self.programName = ""
 		self.url = ""
-		self.regx = ""
-		self.regxpos = 0
+		self.regex = ""
+		self.regexpos = 0
 		self.downloadURL = "" #Web Dir to search for file
 		self.downloadRegx = "" #File to search for
 		self.latestVersion = ""
@@ -30,7 +32,8 @@ class package:
 		config.read(self.__class__.__name__ + ".cfg")
 		self.url = config.get('main', 'url')
 		self.programName = config.get('main', 'programName')
-		print self.url
+		self.regex = config.get('main', 'regex')
+		print self.regex
 		
 	def findVersionLocal(self):
 		"""Finds the local version of a program"""
@@ -39,11 +42,11 @@ class package:
 	def findLatestVersion(self):
 		"""Finds the latest version of a program according to the web"""
 		try:
-			ret = scrapePage(self.regx, self.url, self.regxpos)
+			ret = utils.scrapePage(self.regx, self.url, self.regxpos)
 			self.latestVersion = ret
 			return ret
 		except:
-			print 'unknown error running getWebVersion(%s)' % d
+			print 'unknown error running getWebVersion()'
 			raise
 		else:
 			return ret
