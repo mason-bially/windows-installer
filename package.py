@@ -16,8 +16,8 @@ class package:
 		self.url = ""
 		self.regx = ""
 		self.regxpos = 0
-		self.downloadURL = ""
-		self.downloadRegx = ""
+		self.downloadURL = "" #Web Dir to search for file
+		self.downloadRegx = "" #File to search for
 		self.latestVersion = ""
 		self.currentVersion = ""
 		self.dependencies = []
@@ -29,7 +29,7 @@ class package:
 		config = ConfigParser.RawConfigParser()
 		config.read(self.__class__.__name__ + ".cfg")
 		self.url = config.get('main', 'url')
-		self.
+		self.programName = config.get('main', 'programName')
 		print self.url
 		
 	def findVersionLocal(self):

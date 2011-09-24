@@ -94,7 +94,7 @@ def scrapePage(regx, url, regxpos):
     @return The regexpos'th reg match on the page at url.
     """
     try:
-        ret = re.findall(regex, getPage(url)[regxpos]
+        ret = re.findall(regex, getPage(url))[regxpos]
     except TypeError as strerror:
         if strerror == 'first argument must be a string or compiled pattern':
             print 'you are missing or have an invalid regex in %s' %d
