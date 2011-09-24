@@ -1,10 +1,4 @@
-import os
-
-def packageLoader(name):
-    try:
-        return __import__("package." + name, fromlist='*')
-    except ImportError, e:
-        self.out.add("Could not load package: " + name + "\n\n" + "Error " + str(e.args))
+import sys, os
 
 class PackageManager():
     def __init__(self):
@@ -13,8 +7,17 @@ class PackageManager():
 
     def LoadPackages(self, packageList = None):
         self.allPackNames = [filename for filename in os.listdir('.\\packages\\')]
+        self.allPackNames.remove("defaultpackage")
+        self.allPackNames = filter(lambda x: x[-3:] != '.py' and x[-4:] != '.pyc' , self.allPackNames)
 
-        self.packages = [packageLoader(packName).__getattr__(packName)() for packName in self.allPackNames]
+        print self.allPackNames
+
+        for packName in self.allPackNames:
+            __import__("packages." + packName, fromlist=[packName])
+        
+        self.packages = [getattr(getattr(sys.modules["packages." + packName], packName), packName)() for packName in self.allPackNames]
+
+        print self.packages
 
     def AllPackages(self):
         return self.packages
