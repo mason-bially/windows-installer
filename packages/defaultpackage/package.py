@@ -6,13 +6,14 @@
 import utils
 import ConfigParser
 
-
 class Package:
 	"""A Base class to be used as a starting point for every package
 	It implements the default functions for finding the latest version
 	of a program, install, uninstall etc."""
 	
-	def __init__(self):
+	
+	#Note: packageDir is the directory that the packages folder is located
+	def __init__(self, packageDir):
 		self.programName = ""
 		self.url = ""
 		self.regex = ""
@@ -23,23 +24,32 @@ class Package:
 		self.currentVersion = "" #currently installed version
 		self.dependencies = []
 		self.installed = 0
-		self.readConfig()
-		self.findLatestVersion()
+		self.readConfig(packageDir)
 		self.findVersionLocal()
 		
-	def readConfig(self):
+	def readConfig(self, packageDir):
 		"""Reads the configuration file
 		which must be named the same as the class"""
+		# The config path is necessary to find the config file
+		# because the cwd could change and we need to know where the module is located
 		config = ConfigParser.RawConfigParser()
-		config.read(self.__class__.__name__ + ".cfg")
-		self.url = config.get('main', 'url')
-		self.programName = config.get('main', 'programName')
-		self.regex = config.get('main', 'regex')
-		print self.regex
+		packageDir = packageDir.rstrip("\\") #clean input just in case
+		configpath = str(self.__class__).rstrip(self.__class__.__name__).rstrip(".")
+		configpath = packageDir + "\\" + configpath.replace(".", "\\") + ".cfg"
+		config.read(configpath)
+		if configpath == []:
+			raise ConfigParser.Error("Config File could not be read path was: " + configpath)
+		try:
+			self.url = config.get('main', 'url')
+			self.programName = config.get('main', 'programName')
+			self.regex = config.get('main', 'regex')
+		except ConfigParser.NoOptionError as NoOption:
+			print "Error Reading config for " + self.__class__.__name__ + ": " + str(NoOption)
+			raise
 		
 	def findVersionLocal(self):
 		"""Finds the local version of a program"""
-		print "Sorry This appears to be a stub"
+		self.currentVersion="INVLAID_VERSION"
 		
 	def findLatestVersion(self):
 		"""Finds the latest version of a program according to the web"""
@@ -63,17 +73,14 @@ class Package:
 		"""Uninstalls a program"""
 		print "Sorry This appears to be a stub"
 		
-		def name(self):
-			"""Returns the name of the package"""
-			return self.programName
-
 	def __str__(self):
 		prettyStr = "Package Name: " + self.__class__.__name__ + '\n'
 		prettyStr += "Program Name: " + self.programName
 		prettyStr += "Program Version Latest: " + self.latestVersion + "\n"
 		prettyStr += "Program Version Installed: " + self.currentVersion + "\n"
 		return prettyStr
-		
+	
 	def runTest(self):
-		print "This appears to be a stub"
+		print "Currently Installed Version is: " + self.currentVersion
+		print "Latest Version is: " + self.latestVersion
 		
