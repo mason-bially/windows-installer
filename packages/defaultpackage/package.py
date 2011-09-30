@@ -16,8 +16,9 @@ class Package:
 	def __init__(self, packageDir):
 		self.programName = ""
 		self.url = ""
-		self.regex = ""
-		self.regexpos = 0
+		self.versionRegex = ""
+		self.versionURL = ""
+		self.versionRegexPos = 0
 		self.downloadURL = "" #Web Dir to search for file
 		self.downloadRegx = "" #File to search for
 		self.latestVersion = "" #Latest verison online
@@ -48,11 +49,12 @@ class Package:
 			raise
 		
 	def findVersionLocal(self):
-		"""Finds the local version of a program"""
+		"""Finds the local version of a program online.
+		Uses self.versionRegex to match all versions on self.versionURL"""
 		self.currentVersion="INVLAID_VERSION"
 		
 	def findLatestVersion(self):
-		"""Finds the latest version of a program according to the web"""
+		"""Attempts to find the latest version of a page """
 		try:
 			ret = utils.scrapePage(self.regx, self.url, self.regxpos)
 			self.latestVersion = ret
