@@ -55,6 +55,7 @@ class Package:
 		
 	def findLatestVersion(self):
 		"""Attempts to find the latest version of a page """
+		
 		try:
 			ret = utils.scrapePage(self.regx, self.url, self.regxpos)
 			self.latestVersion = ret
