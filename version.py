@@ -7,4 +7,4 @@ class Command(command.BasePackageCommand):
 
     def Execute(self):
         for package in self.packageManager.AllPackages():
-            print package.name() + " - " + package.findVersionLocal() + '\n'
+            print package
