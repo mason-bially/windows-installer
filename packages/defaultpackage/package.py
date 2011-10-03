@@ -3,7 +3,7 @@
 # Download the latest version of a program, uninstall a program and handle
 # dependencies for a program.
 
-from ..utils import *
+from ..utils import findHighestVersion,scrapePage
 import ConfigParser
 
 class Package:
@@ -62,9 +62,10 @@ class Package:
 				url = self.versionURL
 			elif self.downloadURL != "":
 				pass
-			versions = scrapePage(regx, url)
+			versions = scrapePage(regex, url)
 			ret = findHighestVersion(versions)
-			self.latestVersion = ret
+			self.latestVersion = "FOO"
+			ret ="FOO"
 			return ret
 		except:
 			print 'unknown error running getWebVersion()'
