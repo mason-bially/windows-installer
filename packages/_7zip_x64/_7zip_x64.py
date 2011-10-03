@@ -11,5 +11,5 @@ class _7zip_x64(Package):
 
 
     def __init__(self):
-        Package.__init__(self)
+        Package.__init__(self, "\\".join(__file__.split("\\")[:-3]))
         

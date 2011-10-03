@@ -6,11 +6,14 @@ class PackageManager():
         self.allPackNames = {}
 
     def LoadPackages(self, packageList = None):
+        #load packages from directory, filter for actual package directories
         self.allPackNames = [filename for filename in os.listdir('.\\packages\\')]
-        self.allPackNames.remove("defaultpackage")
-        self.allPackNames = filter(lambda x: x[-3:] != '.py' and x[-4:] != '.pyc' , self.allPackNames)
+        self.allPackNames = filter(lambda x: x[0] == '_' and x[1] != '_', self.allPackNames)
 
+        #debug
         print self.allPackNames
+
+        __import__("packages", fromlist=self.allPackNames)
 
         for packName in self.allPackNames:
             __import__("packages." + packName, fromlist=[packName])
