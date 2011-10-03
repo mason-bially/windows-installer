@@ -32,7 +32,7 @@ def scrapePage(reg, url):
     @return The pos'th reg match on the page at url.
     """
     try:
-        ret = re.findall(reg, getPage(url))
+        ret = re.findall(reg, getPage(url), re.IGNORECASE)
     except TypeError as strerror:
         if strerror == 'first argument must be a string or compiled pattern':
             print 'you are missing or have an invalid regex in %s' % reg
@@ -82,6 +82,8 @@ def breakVersions(versions):
     For example "1.2.3 beta" will become ["1","2","3","BETA"]"""
     versionsSplit = []
     tempVersion = ""
+    # Filter out blanks, they are not valid versions
+    versions = filter(lambda a: a != '', versions)
     for version in versions:
         #Sanitize input by removing white space from start and end
         tempVersion = version.upper()
@@ -130,7 +132,6 @@ def findHighestVersion(versions):
     tempList = breakVersions(versions)
     tempList = brokenVersionToStr(tempList)
     tempList = list(set(tempList))
-    print tempList
     tempList = breakVersions(tempList)
     return findHighestVersionHelper(tempList,0)
     
@@ -146,3 +147,6 @@ def findHighestVersionHelper(versions, col):
             if element[col] == maxVer:
                 returnList.append(element)
         return findHighestVersionHelper(returnList,col + 1)
+
+def findVersionsReg():
+    print "Sorry this appears to be a stub."

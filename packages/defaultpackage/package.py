@@ -5,6 +5,7 @@
 
 from ..utils import findHighestVersion,scrapePage
 import ConfigParser
+import re
 
 class Package:
 	"""A Base class to be used as a starting point for every package
@@ -14,19 +15,20 @@ class Package:
 	
 	#Note: packageDir is the directory that the packages folder is located
 	def __init__(self, packageDir):
-		self.programName = ""
-		self.url = ""
-		self.versionRegex = ""
+		self.programName = "" # Name of the program that the user sees
+		self.url = "" # Main Website URL used as a last resort for searches
+		self.versionRegex = "" # Regular expression that matches version
 		self.versionURL = "" # URL used to find latest version used before downloadURL to find version
 		self.versionRegexPos = 0
 		self.downloadURL = "" #Web URL to search for file used before URL to find 
 		self.downloadRegx = "" #File to search for
 		self.latestVersion = "" #Latest verison online
 		self.currentVersion = "" #currently installed version
-		self.dependencies = []
+		self.dependencies = [] 
 		self.installed = 0
 		self.readConfig(packageDir)
 		self.findVersionLocal()
+		self.betaOK = "" # Has a value if beta versions are acceptable
 		
 	def readConfig(self, packageDir):
 		"""Reads the configuration file
@@ -40,13 +42,16 @@ class Package:
 		config.read(configpath)
 		if configpath == []:
 			raise ConfigParser.Error("Config File could not be read path was: " + configpath)
-		try:
-			self.url = config.get('main', 'url')
-			self.programName = config.get('main', 'programName')
-			self.regex = config.get('main', 'regex')
-		except ConfigParser.NoOptionError as NoOption:
-			print "Error Reading config for " + self.__class__.__name__ + ": " + str(NoOption)
-			raise
+		# Note One cannot itearate over a dict
+		# and change its contents. Thus the following
+		names = []
+		for name in self.__dict__:
+			names.append(name)
+		for name in names:
+			try:
+				self.__dict__[name] = config.get('main', name)
+			except ConfigParser.NoOptionError as NoOption:
+				print "Error Reading config for: " + self.__class__.__name__ + ": " + str(NoOption)
 		
 	def findVersionLocal(self):
 		"""Finds the local version of a program online.
@@ -57,22 +62,33 @@ class Package:
 		"""Attempts to find the latest version of a page """
 		try:
 			url = ""
-			regex = ""
+			regex = self.versionRegex
+			# Determine What URL to use
+			# Try using most accurate URL first
 			if self.versionURL != "":
 				url = self.versionURL
 			elif self.downloadURL != "":
-				pass
+				url = self.downloadURL
+			elif self.url != "":
+				url = self.url
 			versions = scrapePage(regex, url)
+			if self.betaOK == "":
+				versionsTemp = []
+				for version in versions:
+					if re.search("beta",version) == None:
+						versionsTemp.append(version)
+				versions = versionsTemp
+			# Filter out blanks
+			versions = filter(lambda a: a != '', versions)
 			ret = findHighestVersion(versions)
-			self.latestVersion = "FOO"
-			ret ="FOO"
+			self.latestVersion = ret
 			return ret
 		except:
 			print 'unknown error running getWebVersion()'
 			raise
 		else:
 			return ret
-	def download(self):
+	def download(self, directory):
 		"""Downloads the latest version of a program"""
 		print "Sorry this appears to be a stub"
 	def install(self, quiet):
@@ -91,6 +107,7 @@ class Package:
 		return prettyStr
 	
 	def runTest(self):
+		self.findLatestVersion()
 		print "Currently Installed Version is: " + self.currentVersion
 		print "Latest Version is: " + self.latestVersion
 		

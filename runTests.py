@@ -17,7 +17,6 @@ for folder in folders:
     filemode = os.stat(packages_folder + "/" + folder).st_mode
     if stat.S_ISDIR(filemode) and folder != "defaultpackage":
         print "------------Running test for: " + folder + " -------------------"
-        print ""
         exec "import " + packages_folder + "." + folder + "." + folder
         execstr = "foo = " + packages_folder + "." + folder + "." + folder + "." + folder + "(); foo.runTest()"
         exec execstr
