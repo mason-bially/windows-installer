@@ -20,5 +20,6 @@ for folder in folders:
         print ""
         exec "import " + packages_folder + "." + folder + "." + folder
         execstr = "foo = " + packages_folder + "." + folder + "." + folder + "." + folder + "('" + str(os.getcwd()).replace("\\", "\\\\") + "'); foo.runTest()"
+        print execstr
         exec execstr
         print "------------End test for: " + folder + " -----------------------"

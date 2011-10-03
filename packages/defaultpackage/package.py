@@ -3,7 +3,7 @@
 # Download the latest version of a program, uninstall a program and handle
 # dependencies for a program.
 
-import utils
+from ..utils import *
 import ConfigParser
 
 class Package:
@@ -17,9 +17,9 @@ class Package:
 		self.programName = ""
 		self.url = ""
 		self.versionRegex = ""
-		self.versionURL = ""
+		self.versionURL = "" # URL used to find latest version used before downloadURL to find version
 		self.versionRegexPos = 0
-		self.downloadURL = "" #Web Dir to search for file
+		self.downloadURL = "" #Web URL to search for file used before URL to find 
 		self.downloadRegx = "" #File to search for
 		self.latestVersion = "" #Latest verison online
 		self.currentVersion = "" #currently installed version
@@ -55,9 +55,15 @@ class Package:
 		
 	def findLatestVersion(self):
 		"""Attempts to find the latest version of a page """
-		
 		try:
-			ret = utils.scrapePage(self.regx, self.url, self.regxpos)
+			url = ""
+			regex = ""
+			if self.versionURL != "":
+				url = self.versionURL
+			elif self.downloadURL != "":
+				pass
+			versions = scrapePage(regx, url)
+			ret = findHighestVersion(versions)
 			self.latestVersion = ret
 			return ret
 		except:
