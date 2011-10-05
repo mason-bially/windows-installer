@@ -29,6 +29,10 @@ class Package:
 		self.readConfig(packageDir)
 		self.findVersionLocal()
 		self.betaOK = "" # Has a value if beta versions are acceptable
+		self.regVenderName = ""
+		self.regProgName = ""
+		self.regVersLocations = ['''SOFTWARE\Wow6432Node''',
+								'''SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall''']
 		
 	def readConfig(self, packageDir):
 		"""Reads the configuration file

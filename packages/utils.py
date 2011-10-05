@@ -126,8 +126,8 @@ def brokenVersionToStr(versions):
 def findHighestVersion(versions):
     """Takes in a list of strings and returns the highest version formatted in a standard format:
     1.2.3 [ALPHA|BETA]"""
-    # Do some fancy footwork to make sure
-    # There are no duplucates in versions
+    # Do some fancy foot-work to make sure
+    # There are no duplicates in versions
     # So helper function won't recurse forever
     tempList = breakVersions(versions)
     tempList = brokenVersionToStr(tempList)
@@ -148,5 +148,13 @@ def findHighestVersionHelper(versions, col):
                 returnList.append(element)
         return findHighestVersionHelper(returnList,col + 1)
 
-def findVersionsReg():
+def findInstalledVersions(pak):
+    """Takes in a package and attempts to find the installed version(s) If the package is installed."""
     print "Sorry this appears to be a stub."
+    
+    
+def findVersionsReg(pak):
+    """Takes in a package and attempts to find version(s) in the registry"""
+    # Attempt to find the version in the Uninstall Directory of the registry
+    
+    print "Sorry THis appears to be a stub"
