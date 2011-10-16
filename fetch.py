@@ -6,4 +6,5 @@ class Command(command.BasePackageCommand):
         command.BasePackageCommand.__init__(self, args)
 
     def Execute(self):
-        pass
+        for package in self.packageManager.AllPackages():
+            package.download()
