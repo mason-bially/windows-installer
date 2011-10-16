@@ -14,12 +14,15 @@ class InstallError(Exception):
 		return repr(self.value)
 	
 
+packageDir = "\\".join(__file__.split("\\")[:-3])
+
 class Package:
 	"""A Base class to be used as a starting point for every package
 	It implements the default functions for finding the latest version
 	of a program, install, uninstall etc."""
+	
 	#Note: packageDir is the directory that the packages folder is located
-	def __init__(self, packageDir):
+	def __init__(self):
 		self.programName = "" # Name of the program that the user sees
 		self.arch = "" # 32bit or 64bit specified as x86 or x86_64
 		self.url = "" # Main Website URL used as a last resort for searches
@@ -35,7 +38,7 @@ class Package:
 		self.dependencies = []
 		self.installMethod = "" # Installation method exe, msi, or zip 
 		self.installed = False
-		self.readConfig(packageDir)
+		self.readConfig()
 		self.findVersionLocal()
 		self.betaOK = "" # Has a value if beta versions are acceptable
 		self.regVenderName = ""
@@ -43,9 +46,10 @@ class Package:
 		self.regVersLocations = ['''SOFTWARE\Wow6432Node''',
 								'''SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall''']
 		
-	def readConfig(self, packageDir):
+	def readConfig(self):
 		"""Reads the configuration file
 		which must be named the same as the class"""
+		global packageDir
 		# The config path is necessary to find the config file
 		# because the cwd could change and we need to know where the module is located
 		config = ConfigParser.RawConfigParser()
