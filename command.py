@@ -49,7 +49,6 @@ class BasePackageCommand(Base):
         Base.__init__(self, args)
 
         self.packageManager = packagemanager.PackageManager()
-        self.packageManager.LoadPackages(self.args['p'])
 
     def Execute(self):
         pass

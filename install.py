@@ -12,9 +12,10 @@ class Command(command.BasePackageCommand):
             }
         
         command.BasePackageCommand.__init__(self, args)
+        self.packageManager.LoadPackages(self.args['p'])
         
     def Execute(self):
-        for package in self.packageManager.AllPackages():
+        for package in self.packageManager.Packages():
             self.ExecutePackage(package)
             
     def ExecutePackage(self, package):
