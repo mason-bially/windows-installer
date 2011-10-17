@@ -47,6 +47,27 @@ def scrapePage(reg, url):
             print "No Matches for '%s' found on '%s'" % (reg, url)
             raise IndexError("No Matches found on page")
         return ret
+    
+def downloadFile(URL, directory, fileName):
+    """Downloads a given URL to directory"""
+    try:
+        f = urllib2.urlopen(URL)
+        fileContents = f.read()
+        extension = "." + f.geturl().split(".")[-1]
+        f.close()
+        downloadpath = directory + fileName + extension
+        if not directory.endswith("/"):
+            directory = directory + "/"
+        with open(downloadpath, "wb") as downloadedFile:
+            downloadedFile.write(fileContents)
+        return downloadpath
+    except urllib2.HTTPError, e:
+        print "ERROR DOWNLOADING: ", e.code, URL
+        raise
+    except urllib2.URLError, e:
+        print "URL ERROR: " , e.reason, URL
+        raise
+    
 
 def findInString(string, wordList):
     """Checks to see if any of the words in wordList are in string

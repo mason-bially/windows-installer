@@ -3,29 +3,38 @@
 # Download the latest version of a program, uninstall a program and handle
 # dependencies for a program.
 
-from ..utils import findHighestVersion,scrapePage
+from ..utils import findHighestVersion,scrapePage,downloadFile
 import ConfigParser
 import re
+from subprocess import call
+class InstallError(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
+	
 
 class Package:
 	"""A Base class to be used as a starting point for every package
 	It implements the default functions for finding the latest version
 	of a program, install, uninstall etc."""
-	
-	
 	#Note: packageDir is the directory that the packages folder is located
 	def __init__(self, packageDir):
 		self.programName = "" # Name of the program that the user sees
+		self.arch = "" # 32bit or 64bit specified as x86 or x86_64
 		self.url = "" # Main Website URL used as a last resort for searches
 		self.versionRegex = "" # Regular expression that matches version
 		self.versionURL = "" # URL used to find latest version used before downloadURL to find version
-		self.versionRegexPos = 0
+		#self.versionRegexPos = 0
 		self.downloadURL = "" #Web URL to search for file used before URL to find 
-		self.downloadRegx = "" #File to search for
+		self.downloadRegex = "" #File to search for
+		self.downloadLink = "" #To be used if a download link can be formed with just program Version
+		self.downloadedPath = ""
 		self.latestVersion = "" #Latest verison online
 		self.currentVersion = "" #currently installed version
-		self.dependencies = [] 
-		self.installed = 0
+		self.dependencies = []
+		self.installMethod = "" # Installation method exe, msi, or zip 
+		self.installed = False
 		self.readConfig(packageDir)
 		self.findVersionLocal()
 		self.betaOK = "" # Has a value if beta versions are acceptable
@@ -94,10 +103,29 @@ class Package:
 			return ret
 	def download(self, directory):
 		"""Downloads the latest version of a program"""
-		print "Sorry this appears to be a stub"
+		if self.downloadLink != '':
+			self.downloadLink = self.parseVersionSyntax(self.downloadLink)
+			fileURL = self.downloadLink
+		else:
+			self.downloadRegex = self.parseDownloadRegex()
+			fileURL = scrapePage(self.downloadRegex, self.downloadURL)[0]
+		if not re.match(".*:.*", fileURL):
+			# If the path is not absolute we need to put the downloadURL on the front
+			temp = self.downloadURL.split('/')[-1] # Find the last bit of downloadURL
+			temp = self.downloadURL.rstrip(temp) # strip of everything up to /
+			fileURL = temp + fileURL
+		fileName = self.__class__.__name__ + "-" + self.latestVersion
+		self.downloadedPath = downloadFile(fileURL, directory, fileName)
 	def install(self, quiet):
 		"""Installs the latest version of a program"""
-		print "Sorry This appears to be a stub"
+		if self.installMethod == "exe":
+			self.installExe()
+		elif self.installMethod == "msi":
+			self.installMsi()
+		elif self.installMethod == "zip":
+			self.installZip()
+		else:
+			raise InstallError("Installation Method Not supported")
 		
 	def uninstall(self):
 		"""Uninstalls a program"""
@@ -109,9 +137,30 @@ class Package:
 		prettyStr += "Program Version Latest: " + self.latestVersion + "\n"
 		prettyStr += "Program Version Installed: " + self.currentVersion + "\n"
 		return prettyStr
-	
+
+	def parseVersionSyntax(self, string):
+		"""Takes in a string an looks for #VERSION# and #DOTLESSVERSION# and deals with it"""
+		#TODO: Fix this, doesn't actually parse it just replaces currently
+		# As such this function is a major hack!
+		if (string.find("#VERSION#") != -1):
+			string = string.replace("#VERSION#", self.latestVersion)
+		if (string.find("#DOTLESSVERSION#") != -1):
+			string = string.replace('#DOTLESSVERSION#', self.latestVersion.replace('.',''))
+		return string
+	def parseDownloadRegex(self):
+		"""Takes in the filename specified in a package config and gets rid of #VERSION#"""
+		self.downloadRegex = self.parseVersionSyntax(self.downloadRegex)
+		return self.downloadRegex
 	def runTest(self):
 		self.findLatestVersion()
+		self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
 		print "Currently Installed Version is: " + self.currentVersion
 		print "Latest Version is: " + self.latestVersion
+	def installFork(self):
 		
+	def installExe(self):
+		print "This appears to be a stub"
+	def installMsi(self):
+		print "This appears to be a stub"
+	def installZip(self):
+		print "This appears to be a stub"
