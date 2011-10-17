@@ -9,7 +9,7 @@ from ..defaultpackage.package import Package
 
 
 
-class _InkscapePackage):
+class _Inkscape(Package):
 
 
     def __init__(self):
