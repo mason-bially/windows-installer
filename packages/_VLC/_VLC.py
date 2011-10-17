@@ -13,5 +13,5 @@ class _VLC(Package):
 
 
     def __init__(self):
-        Package.__init__(self, "\\".join(__file__.split("\\")[:-3]))
+        Package.__init__(self)
         

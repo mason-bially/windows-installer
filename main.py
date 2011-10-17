@@ -49,7 +49,7 @@ class CommandLine():
         global commandList
         
         print "Below are the valid commands:"
-        for key, command in self.commandList.iteritems():
+        for key, command in commandList.iteritems():
             print '\t', key, '\n\t  ', command[1]
 
 

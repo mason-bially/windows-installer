@@ -1,4 +1,7 @@
-import command
+import command, logging
+import fetch
+
+logger = logging.getLogger()
 
 class Command(command.BasePackageCommand):
     def __init__(self, args):
@@ -19,8 +22,10 @@ class Command(command.BasePackageCommand):
             self.ExecutePackage(package)
             
     def ExecutePackage(self, package):
+        global logger
+
         if not '-no-fetch' in self.argDescription:
-            package.download()
+            fetch.Command.ExecutePackage(self, package)
 
         package.install(not 'v' in self.argDescription)
             
