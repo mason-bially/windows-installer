@@ -1,5 +1,5 @@
 '''
-GIMP package class
+Ghostscript package class
 
 Created on Oct 16, 2011
 
@@ -9,7 +9,7 @@ from ..defaultpackage.package import Package
 
 
 
-class _GIMP(Package):
+class _Ghostscript(Package):
 
 
     def __init__(self):
