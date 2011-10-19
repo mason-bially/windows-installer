@@ -71,7 +71,8 @@ class Package:
             try:
                 self.__dict__[name] = config.get('main', name)
             except ConfigParser.NoOptionError as NoOption:
-                print "Error Reading config for: " + self.__class__.__name__ + ": " + str(NoOption)
+                t = 0
+                #print "Error Reading config for: " + self.__class__.__name__ + ": " + str(NoOption)
         
     def findVersionLocal(self):
         """Finds the local version of a program online.
@@ -159,10 +160,11 @@ class Package:
         self.downloadRegex = self.parseVersionSyntax(self.downloadRegex)
         return self.downloadRegex
     def runTest(self):
-        self.findLatestVersion()
-        self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
-        print "Currently Installed Version is: " + self.currentVersion
-        print "Latest Version is: " + self.latestVersion
+        if self.programName == 'Scribus':
+            self.findLatestVersion()
+            self.download("""C:/Users/TehKyle/Downloads/Download-Test/""")
+            print "Currently Installed Version is: " + self.currentVersion
+            print "Latest Version is: " + self.latestVersion
     def installFork(self):
         pass
     def installExe(self):
