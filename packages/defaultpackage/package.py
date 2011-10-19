@@ -160,11 +160,10 @@ class Package:
         self.downloadRegex = self.parseVersionSyntax(self.downloadRegex)
         return self.downloadRegex
     def runTest(self):
-        if self.programName == 'Scribus':
-            self.findLatestVersion()
-            self.download("""C:/Users/TehKyle/Downloads/Download-Test/""")
-            print "Currently Installed Version is: " + self.currentVersion
-            print "Latest Version is: " + self.latestVersion
+        self.findLatestVersion()
+        self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
+        print "Currently Installed Version is: " + self.currentVersion
+        print "Latest Version is: " + self.latestVersion
     def installFork(self):
         pass
     def installExe(self):
