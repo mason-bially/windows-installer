@@ -27,5 +27,5 @@ class Command(command.BasePackageCommand):
         if not '-no-fetch' in self.argDescription:
             fetch.Command.ExecutePackage(self, package)
 
-        package.install(not 'v' in self.argDescription)
+        package.install(not 'v' in self.argDescription, "downloads")
             

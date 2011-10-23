@@ -123,7 +123,7 @@ class Package:
         for packageFile in os.listdir(directory):
             filename = self.__class__.__name__ + "-" + self.latestVersion
             if packageFile.rfind(filename) != -1:
-                self.downloadedPath = directory + '/' + filename + packageFile.split(".")[-1]
+                self.downloadedPath = directory + '/' + filename + '.' + packageFile.split(".")[-1]
                 break
         #Dont redownload File if already downloaded
         if self.downloadedPath != "":
@@ -149,7 +149,7 @@ class Package:
         """Installs the latest version of a program"""
         #TODO: add check to see if file is downloaded. If not download it
         if self.downloadedPath == "":
-            self.download()
+            self.download(downloadPath)
         
         #Attempt to auto figure out Install method using path
         if self.installMethod == "":
@@ -216,6 +216,7 @@ class Package:
         self.installFork()
     
     def installMsi(self, quiet=False, downloadPath=""):
+        self.downloadedPath = self.downloadedPath.replace("/","\\");
         args = ["msiexec", "/qb", "/i", self.downloadedPath]
         call(args)
     
