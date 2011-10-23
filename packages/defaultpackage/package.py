@@ -213,7 +213,7 @@ class Package:
         call([self.downloadedPath].append(self.installSilentArgs))
     
     def installExe(self, quiet=False, downloadPath=""):
-        self.installFork()
+        self.installFork(quiet, downloadPath)
     
     def installMsi(self, quiet=False, downloadPath=""):
         self.downloadedPath = self.downloadedPath.replace("/","\\");
