@@ -6,7 +6,7 @@
 from ..utils import findHighestVersion,scrapePage,downloadFile
 import ConfigParser, logging
 
-import re
+import re, os
 from subprocess import call
 class InstallError(Exception):
     
@@ -111,8 +111,25 @@ class Package:
             raise
         else:
             return ret
+    
     def download(self, directory):
         """Downloads the latest version of a program"""
+        #TODO: Make this handle download errors gracefully
+        
+        #Check to see if findLatestVersion has been run
+        if self.latestVersion == "":
+            self.findLatestVersion()
+        #Check to see if file is already downloaded
+        for packageFile in os.listdir(directory):
+            filename = self.__class__.__name__ + "-" + self.latestVersion
+            if packageFile.rfind(filename) != -1:
+                self.downloadedPath = directory + '/' + filename + packageFile.split(".")[-1]
+                break
+        #Dont redownload File if already downloaded
+        if self.downloadedPath != "":
+            return self.downloadedPath
+        
+        #Otherwise Download file
         if self.downloadLink != '':
             self.downloadLink = self.parseVersionSyntax(self.downloadLink)
             fileURL = self.downloadLink
@@ -126,8 +143,19 @@ class Package:
             fileURL = temp + fileURL
         fileName = self.__class__.__name__ + "-" + self.latestVersion
         self.downloadedPath = downloadFile(fileURL, directory, fileName)
+        return self.downloadedPath
+
     def install(self, quiet=False, downloadPath=""):
         """Installs the latest version of a program"""
+        #TODO: add check to see if file is downloaded. If not download it
+        if self.downloadedPath == "":
+            self.download()
+        
+        #Attempt to auto figure out Install method using path
+        if self.installMethod == "":
+            self.installMethod = self.downloadedPath.split(".")[-1].lower()
+            
+        #Call correct installation method
         if self.installMethod == "exe":
             self.installExe()
         elif self.installMethod == "msi":
@@ -152,30 +180,44 @@ class Package:
         """Takes in a string an looks for #VERSION# and #DOTLESSVERSION# and deals with it"""
         #TODO: Fix this, doesn't actually parse it just replaces currently
         # As such this function is a major hack!
+        
+        #Error Checking
+        if self.latestVersion == "":
+            self.findLatestVersion()
+        
         if (string.find("#VERSION#") != -1):
             string = string.replace("#VERSION#", self.latestVersion)
         if (string.find("#DOTLESSVERSION#") != -1):
             string = string.replace('#DOTLESSVERSION#', self.latestVersion.replace('.',''))
         return string
+    
     def parseDownloadRegex(self):
         """Takes in the filename specified in a package config and gets rid of #VERSION#"""
         self.downloadRegex = self.parseVersionSyntax(self.downloadRegex)
         return self.downloadRegex
+    
     def runTest(self):
         self.findLatestVersion()
         self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
+    
     def installFork(self, quiet=False, downloadPath=""):
         #TODO: Add check to see if file is already even if the downloadedPath is null
         #This should search the download path for package downloads 
         if self.downloadedPath == "":
             raise InstallError("Error no installation file downloaded")
+        #Change install arguments from a string to a list
         exec "self.installSilentArgs = " + self.installSilentArgs
+        #Launch the installer with 
         call([self.downloadedPath].append(self.installSilentArgs))
+    
     def installExe(self, quiet=False, downloadPath=""):
         self.installFork()
+    
     def installMsi(self, quiet=False, downloadPath=""):
-        self.installFork()
+        args = ["msiexec", "/qb", "/i", self.downloadedPath]
+        call(args)
+    
     def installZip(self, quiet=False, downloadPath=""):
         print "This appears to be a stub"
