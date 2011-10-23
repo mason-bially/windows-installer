@@ -55,7 +55,7 @@ def downloadFile(URL, directory, fileName):
         fileContents = f.read()
         extension = "." + f.geturl().split(".")[-1]
         f.close()
-        downloadpath = directory + fileName + extension
+        downloadpath = directory + '/' + fileName + extension
         if not directory.endswith("/"):
             directory = directory + "/"
         with open(downloadpath, "wb") as downloadedFile:

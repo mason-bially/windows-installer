@@ -167,8 +167,10 @@ class Package:
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
     def installFork(self, quiet=False, downloadPath=""):
+        #TODO: Add check to see if file is already even if the downloadedPath is null
+        #This should search the download path for package downloads 
         if self.downloadedPath == "":
-            pass
+            raise InstallError("Error no installation file downloaded")
         exec "self.installSilentArgs = " + self.installSilentArgs
         call([self.downloadedPath].append(self.installSilentArgs))
     def installExe(self, quiet=False, downloadPath=""):
