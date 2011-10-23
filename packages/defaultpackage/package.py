@@ -39,8 +39,10 @@ class Package:
         self.latestVersion = "" #Latest verison online
         self.currentVersion = "" #currently installed version
         self.dependencies = []
-        self.installMethod = "" # Installation method exe, msi, or zip 
+        self.installMethod = "" # Installation method exe, msi, or zip
+        self.installSilentArgs = "" # Arguments to pass to installer for silent install
         self.installed = False
+        self.uninstalled = False
         self.readConfig()
         self.findVersionLocal()
         self.betaOK = "" # Has a value if beta versions are acceptable
@@ -123,7 +125,7 @@ class Package:
             fileURL = temp + fileURL
         fileName = self.__class__.__name__ + "-" + self.latestVersion
         self.downloadedPath = downloadFile(fileURL, directory, fileName)
-    def install(self, quiet):
+    def install(self, quiet=False, downloadPath=""):
         """Installs the latest version of a program"""
         if self.installMethod == "exe":
             self.installExe()
@@ -163,11 +165,14 @@ class Package:
         self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
-    def installFork(self):
-        pass
-    def installExe(self):
-        print "This appears to be a stub"
-    def installMsi(self):
-        print "This appears to be a stub"
-    def installZip(self):
+    def installFork(self, quiet=False, downloadPath=""):
+        if self.downloadedPath == "":
+            pass
+        exec "self.installSilentArgs = " + self.installSilentArgs
+        call([self.downloadedPath].append(self.installSilentArgs))
+    def installExe(self, quiet=False, downloadPath=""):
+        self.installFork()
+    def installMsi(self, quiet=False, downloadPath=""):
+        self.installFork()
+    def installZip(self, quiet=False, downloadPath=""):
         print "This appears to be a stub"
