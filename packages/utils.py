@@ -1,5 +1,6 @@
 import urllib2
 import re
+from BeautifulSoup import BeautifulSoup
 
 def getPage(url):
     """Returns the contents of a url as a string.
@@ -47,6 +48,23 @@ def scrapePage(reg, url):
             print "No Matches for '%s' found on '%s'" % (reg, url)
             raise IndexError("No Matches found on page")
         return ret
+
+def parsePage(reg, url):
+    # TO DO: Figure out how to pick the correct link.
+    #        Just chooses first one now.
+    try:
+        page = urllib2.urlopen(url)
+        soup = BeautifulSoup(page)
+        page.close()
+    except urllib2.URLError:
+        print 'Couldn not connect to and read from %s' % url
+    except:
+        print 'unknown error running  parsePage(%s)' % url
+        raise
+    else:
+        #use linkRegex to find useful links, possible downloads
+        links = soup.fetch(lambda(x): x.name=='a' and re.search(reg, repr(x.string), re.IGNORECASE) != None)
+        return links[0]['href']
     
 def downloadFile(URL, directory, fileName):
     """Downloads a given URL to directory"""

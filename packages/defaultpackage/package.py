@@ -3,11 +3,12 @@
 # Download the latest version of a program, uninstall a program and handle
 # dependencies for a program.
 
-from ..utils import findHighestVersion,scrapePage,downloadFile
+from ..utils import findHighestVersion,scrapePage,parsePage,downloadFile
 import ConfigParser, logging
 
 import re, os
 from subprocess import call
+from BeautifulSoup import BeautifulSoup
 class InstallError(Exception):
     
     def __init__(self, value):
@@ -37,6 +38,7 @@ class Package:
         self.downloadRegex = "" #File to search for
         self.downloadLink = "" #To be used if a download link can be formed with just program Version
         self.downloadedPath = ""
+        self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links if above fails
         self.latestVersion = "" #Latest verison online
         self.currentVersion = "" #currently installed version
         self.dependencies = []
@@ -133,9 +135,11 @@ class Package:
         if self.downloadLink != '':
             self.downloadLink = self.parseVersionSyntax(self.downloadLink)
             fileURL = self.downloadLink
-        else:
+        elif self.downloadRegex != '':
             self.downloadRegex = self.parseDownloadRegex()
             fileURL = scrapePage(self.downloadRegex, self.downloadURL)[0]
+        else:
+            fileURL = parsePage(self.linkRegex, self.downloadURL)
         if not re.match(".*:.*", fileURL):
             # If the path is not absolute we need to put the downloadURL on the front
             temp = self.downloadURL.split('/')[-1] # Find the last bit of downloadURL
@@ -187,6 +191,8 @@ class Package:
         
         if (string.find("#VERSION#") != -1):
             string = string.replace("#VERSION#", self.latestVersion)
+        if (string.find("#VERSIONFIRST#") != -1):
+            string = string.replace("#VERSIONFIRST#", self.latestVersion.split('.')[0])
         if (string.find("#DOTLESSVERSION#") != -1):
             string = string.replace('#DOTLESSVERSION#', self.latestVersion.replace('.',''))
         return string
@@ -198,7 +204,7 @@ class Package:
     
     def runTest(self):
         self.findLatestVersion()
-        self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
+        #self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
     
