@@ -204,7 +204,7 @@ class Package:
     
     def runTest(self):
         self.findLatestVersion()
-        #self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
+        self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
     
