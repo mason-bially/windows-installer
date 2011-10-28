@@ -4,20 +4,6 @@ import command, install, upgrade, fetch, version
 import command
 import packagemanager
 
-commandList = {}
-
-class HelpCommand(command.BasePackageCommand):
-    def __init__(self, args):
-        command.BasePackageCommand.__init__(self, args)
-
-    def Execute(self):
-        global commandList
-        if len(self.args['']) > 0:
-            command = self.args[''][0]
-            if command in commandList:
-                print "Below are the options for the '" + command + "' command:"
-                commandList[command][0]("").PrintHelp()
-
 commandList = {
             "install":(install.Command,
                        "Installs packages."),
@@ -26,9 +12,7 @@ commandList = {
             "fetch":(fetch.Command,
                        "Downloads packages."),
             "version":(version.Command,
-                       "Reports information about current packages."),
-            "help":(HelpCommand,
-                       "Prints out help about the command.")}
+                       "Reports information about current packages.")}
 
 
 class CommandLine():
@@ -40,10 +24,13 @@ class CommandLine():
         
         command = commandList[argv[0]][0](argv[1:])
         if command == None:
-            return False
+            raise Exception("Invalid command")
         else:
             command.Execute()
             return True
+
+    def ValidCommand(self, argv):
+        return argv[0] in commandList
 
     def Help(self):
         global commandList
@@ -55,5 +42,11 @@ class CommandLine():
 
 if __name__ == "__main__":
     commandLine = CommandLine()
-    if len(os.sys.argv) == 1 or not commandLine.Execute(os.sys.argv[1:]):
+    argv = os.sys.argv[1:]
+    if len(os.sys.argv) == 1 or not commandLine.ValidCommand(argv):
         commandLine.Help()
+    else:
+        try:
+            commandLine.Execute(argv)
+        except Exception as e:
+            print e

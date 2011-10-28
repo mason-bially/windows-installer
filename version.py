@@ -3,13 +3,15 @@ import packagemanager
 
 class Command(command.BasePackageCommand):
     def __init__(self, args):
-        command.BasePackageCommand.__init__(self, args)
-        if self.args['p'] == []:
-            self.packageManager.LoadPackages(None)
-        else:
-            self.packageManager.LoadPackages(self.args['p'])
+        self.runAllPackagesDefault = True
+        command.BasePackageCommand.__init__(self, 
+            {'prog': "version",
+             'description': "Gathers and display version information for packages."})
+
+        self.ParseArgs(args)
 
 
     def Execute(self):
         for package in self.packageManager.Packages():
             print package
+            

@@ -1,54 +1,45 @@
 import os
 import packagemanager
+import argparse
 
-class Base():
+class Base():    
+    def __init__(self, argument_parser = {}):
+        self.parser = argparse.ArgumentParser(**argument_parser)
+        self.args = {}
+
     def ParseArgs(self, args):
-        curArg = ''
-        curArgLen = 0
-        pargs = {'': []}
-        pargs.update({arg: [] for arg in self.argDescription.keys()})
-        for arg in args:
-            if arg[0] == '-':
-                curArg = arg[1:]
-                curArgLen = 0
-                pargs[curArg] = []
-            else:
-                if curArg in self.argDescription:
-                    curArgMax = self.argDescription[curArg]['maxSize']
-                    if curArgMax == -1 or curArgMax > curArgLen:
-                        pargs[curArg].append(arg)
-                        curArgLen += 1
-                    else:
-                        pargs[''].append(arg)
-                else:
-                    pargs[curArg].append(arg)
-
-        self.args = pargs
+        self.args = vars(self.parser.parse_args(args))
         
-    def __init__(self, args):
-        self.ParseArgs(args)
-
     def Execute(self):
         pass
 
-    def PrintHelp(self):
-        if 'argDescription' in self.__dict__:
-            for key, option in self.argDescription.iteritems():
-                print '\t', '-' + key, '\n\t  ', option['description']
-
 class BasePackageCommand(Base):
-    def __init__(self, args):
-        argDescription = {'p': {'maxSize': -1, 'description':
-                   "A list of packages to run this command on."}}
+    def __init__(self, argument_parser = {}):
+        Base.__init__(self, argument_parser)
 
-        if 'argDescription' in self.__dict__:
-            self.argDescription.update(argDescription)
+        #If this slot is set and true then the packages list is optional
+        if 'runAllPackagesDefault' in self.__dict__ and self.runAllPackagesDefault:
+            my_nargs = '*'
         else:
-            self.argDescription = argDescription
+            my_nargs = '+'
+            self.runAllPackagesDefault = False
+            
+        self.parser.add_argument('packages', nargs=my_nargs,
+                                 default=None,
+                                 help="list of packages to perform this action on")
         
-        Base.__init__(self, args)
-
         self.packageManager = packagemanager.PackageManager()
+        
 
+    def ParseArgs(self, args):
+        Base.ParseArgs(self, args)
+        if self.args['packages'] != []:
+            self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
+        else:
+            if self.runAllPackagesDefault:
+                self.packageManager.LoadPackages(None)
+            else:
+                self.packageManager.LoadPackages([])            
+        
     def Execute(self):
         pass

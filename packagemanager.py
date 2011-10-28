@@ -1,4 +1,22 @@
-import sys, os
+import sys, os, traceback
+
+class PackageException(Exception):
+    def __init__(self, error, inner = None, packages = None, traceback = None):
+        self.inner = inner
+        self.packages = packages
+        self.traceback = traceback
+        Exception.__init__(self, error)
+
+    def __str__(self):
+        if isinstance(self.packages, list):
+            return Exception.__str__(self) + ":\nPackages: " + str(self.packages)
+        elif self.inner != None and self.traceback != None:
+            if self.packages != None:
+                return "".join(traceback.format_tb(self.traceback)) + "\n" + Exception.__str__(self) + ":\nPackage: " + str(self.packages) + "\n" + str(self.inner)
+            else:
+                return "".join(traceback.format_tb(self.traceback)) + "\n" + Exception.__str__(self) + ":\n" + str(self.inner)
+        elif self.packages != None:
+            return Exception.__str__(self) + ":\nPackage: " + str(self.packages)
 
 class PackageManager():
     def __init__(self):
@@ -18,17 +36,19 @@ class PackageManager():
             #intersect of packages that are in both
             packNames = list(set(self.allPackNames) & set(packageList))
 
-            #print errorsof the difference
+            #find packages which arn't in our list
             badPackages = list(set(packageList)-set(packNames))
 
             if badPackages != []:
-                print "Bad Packages:", badPackages
-                return
+                raise PackageException("Bad Packages", packages=badPackages)
 
         __import__("packages", fromlist=packNames)
 
         for packName in packNames:
-            __import__("packages." + packName, fromlist=[packName])
+            try:
+                __import__("packages." + packName, fromlist=[packName])
+            except Exception as inner:
+                raise PackageException("Package threw error during instantiation", inner, packName, sys.exc_info()[2])
         
         self.packages = [getattr(getattr(sys.modules["packages." + packName], packName), packName)() for packName in packNames]
 
