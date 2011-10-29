@@ -13,5 +13,6 @@ class Command(command.BasePackageCommand):
 
     def Execute(self):
         for package in self.packageManager.Packages():
+            package.findLatestVersion()
             print package
             
