@@ -2,7 +2,8 @@ import os
 import packagemanager
 import argparse
 
-class Base():    
+class Base():
+    """Base command class"""
     def __init__(self, argument_parser = {}):
         self.parser = argparse.ArgumentParser(**argument_parser)
         self.args = {}
@@ -14,6 +15,7 @@ class Base():
         pass
 
 class BasePackageCommand(Base):
+    """Adds functionality to make package based commands easier to write"""
     def __init__(self, argument_parser = {}):
         Base.__init__(self, argument_parser)
 
@@ -43,3 +45,12 @@ class BasePackageCommand(Base):
         
     def Execute(self):
         pass
+
+#################################
+# Shared argument specifications
+
+def AttachDownloadArgument(self):
+    """Attaches download directory arguments to the command's parser"""
+    self.parser.add_argument('-d', '--download-directory', dest="dir",
+                            default="downloads",
+                            help="Directory to download files to.")

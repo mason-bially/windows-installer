@@ -7,9 +7,7 @@ class Command(command.BasePackageCommand):
             {'prog': "fetch",
              'description': "Downloads packages."})
 
-        self.parser.add_argument('-d', '--download-directory', dest="dir",
-                                default="downloads",
-                                help="Directory to download files to.")
+        command.AttachDownloadArgument(self)
 
         self.ParseArgs(args)
             
@@ -19,5 +17,5 @@ class Command(command.BasePackageCommand):
             
     def ExecutePackage(self, package):
         package.findLatestVersion()
-        print self.args['dir']
+
         package.download(self.args['dir'])
