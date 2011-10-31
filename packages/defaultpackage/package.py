@@ -75,7 +75,7 @@ class Package:
             try:
                 self.__dict__[name] = config.get('main', name)
             except ConfigParser.NoOptionError as NoOption:
-                self.logger.warning("Config read error: " + str(NoOption))
+                self.logger.debug("Config read error: " + str(NoOption))
         
     def findVersionLocal(self):
         """Finds the local version of a program online.

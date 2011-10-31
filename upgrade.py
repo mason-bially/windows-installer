@@ -6,4 +6,5 @@ class Command(command.BasePackageCommand):
             {'prog': "upgrade",
              'description': "Upgrades packages. NOT IMPLEMENTED!"})
 
-    
+        self.ParseArgs(args)
+        self.PostArgInit()

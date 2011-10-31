@@ -1,7 +1,20 @@
 import command, logging
 import fetch
 
-class Command(command.BasePackageCommand):
+class Functionality(command.Base, fetch.Functionality):
+    def ExecutePackage(self, package):
+        self.logger.debug("Starting install functionality")
+        
+        if not self.args['no-fetch']:
+            fetch.Functionality.ExecutePackage(self, package)
+
+        self.logger.info("Installing package.")
+        package.install(not 'show' in self.args['gui'], self.args['dir'])
+        
+        self.logger.debug("Ending install functionality")
+
+
+class Command(command.BasePackageCommand, Functionality):
     def __init__(self, args):
         command.BasePackageCommand.__init__(self,
             {'prog': "install",
@@ -16,13 +29,7 @@ class Command(command.BasePackageCommand):
         command.AttachDownloadArgument(self)
         
         self.ParseArgs(args)
-            
-    def ExecutePackage(self, package):
-        
-        if not self.args['no-fetch']:
-            fetch.Command.ExecutePackage(self, package)
-
-        package.install(not 'show' in self.args['gui'], self.args['dir'])
+        self.PostArgInit()
 
         
             

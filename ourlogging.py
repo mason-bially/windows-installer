@@ -20,9 +20,9 @@ def config(consoleLevel=INFO, fileName='default.log', debugInfo=False):
 
     #The formmatter
     if debugInfo:
-        f = Formatter('%(module)-12s:%(lineno)-3s ++ %(packageorcommand)-14s %(levelname)-8s - %(message)s')
+        f = Formatter('%(module)-14s:%(lineno)-3s ++ %(packageorcommand)-16s %(levelname)-8s - %(message)s')
     else:
-        f = Formatter('%(packageorcommand)-14s %(levelname)-8s - %(message)s')
+        f = Formatter('%(packageorcommand)-16s %(levelname)-8s - %(message)s')
     ch.setFormatter(f)
     fh.setFormatter(f)
     
@@ -38,4 +38,4 @@ def commandLogger(command):
     return LoggerAdapter(getLogger(command), {'packageorcommand': command})
                                               
 def otherLogger(name):
-    return LoggerAdapter(getLogger(command), {'packageorcommand': ' * '+name})
+    return LoggerAdapter(getLogger(name), {'packageorcommand': '*'+name})

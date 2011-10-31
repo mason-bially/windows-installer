@@ -9,8 +9,8 @@ class Command(command.BasePackageCommand):
              'description': "Gathers and display version information for packages."})
 
         self.ParseArgs(args)
+        self.PostArgInit()
 
     def ExecutePackage(self):
-        package.findLatestVersion()
         print package
             

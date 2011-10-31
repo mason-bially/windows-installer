@@ -23,8 +23,11 @@ class Base():
         
     def ParseArgs(self, args):
         self.args = vars(self.parser.parse_args(args))
+
+    def PostArgInit(self):
         loggingConfig = {}
-        
+
+        #Set up logging
         if not ourlogging.configured:
             if self.args['debug']:
                 loggingConfig['debugInfo'] = True
@@ -39,9 +42,12 @@ class Base():
             ourlogging.config(**loggingConfig)
 
         self.logger = ourlogging.commandLogger(self.parser.prog)
+        self.logger.debug("Logger created, starting logging now.")
         
     def Execute(self):
         pass
+
+
 
 class BasePackageCommand(Base):
     """Adds functionality to make package based commands easier to write"""
@@ -65,8 +71,10 @@ class BasePackageCommand(Base):
         self.packageManager = packagemanager.PackageManager()
         
 
-    def ParseArgs(self, args):
-        Base.ParseArgs(self, args)
+    def PostArgInit(self):
+        Base.PostArgInit(self)
+
+        #Set up package manager
         if self.args['packages'] != []:
             self.logger.debug("Loding packages: " + str(self.args['packages']))
             self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
@@ -86,6 +94,12 @@ class BasePackageCommand(Base):
     def ExecutePackages(self):
         for package in self.packageManager.Packages():
             try:
+                #This prepares the packages needed variables
+                self.logger.debug("Preparing package '" + package.name() + "'")
+                package.findLatestVersion()
+
+                #This calls the functionality related to each class
+                self.logger.debug("Executing functionality for '" + package.name() + "'")
                 self.ExecutePackage(package)
             except Exception as e:
                 self.logger.error("Package '" + package.name() + "' threw exception: \"" + str(e) + '"')

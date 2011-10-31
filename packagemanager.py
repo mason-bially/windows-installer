@@ -1,4 +1,5 @@
 import sys, os, traceback
+import ourlogging
 
 class PackageException(Exception):
     def __init__(self, error, inner = None, packages = None, traceback = None):
@@ -21,6 +22,8 @@ class PackageException(Exception):
 class PackageManager():
     def __init__(self):
         self.packages = {}
+
+        self.logger = ourlogging.otherLogger("Package Manager")
         
         #load packages from directory, filter for actual package directories
         self.allPackNames = [filename for filename in os.listdir('.\\packages\\')]
@@ -50,14 +53,17 @@ class PackageManager():
 
     def _loadPackages(self, packNames):
         """This actually loads the packages, should never be called from outside this class"""
+        self.logger.debug("Importing 'packages' module.")
         __import__("packages", fromlist=packNames)
 
         for packName in packNames:
             try:
+                self.logger.debug("Importing 'packages."+packName+"' module.")
                 __import__("packages." + packName, fromlist=[packName])
             except Exception as inner:
                 raise PackageException("Package threw error during instantiation", inner, packName, sys.exc_info()[2])
-        
+
+        self.logger.debug("Generating package objects.")
         self.packages = [getattr(getattr(sys.modules["packages." + packName], packName), packName)() for packName in packNames]
 
     def Packages(self):
