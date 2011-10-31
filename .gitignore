@@ -3,3 +3,5 @@ session*
 *.swp
 *~
 *.pyc
+
+/default.log

@@ -25,7 +25,7 @@ class Package:
     
     #Note: packageDir is the directory that the packages folder is located
     def __init__(self):
-        self.logger = ourlogging.packageLogger(self.__class__.__name__[1:])
+        self.logger = ourlogging.packageLogger(self.name())
         
         self.programName = "" # Name of the program that the user sees
         self.arch = "" # 32bit or 64bit specified as x86 or x86_64
@@ -171,9 +171,12 @@ class Package:
     def uninstall(self):
         """Uninstalls a program"""
         print "Sorry This appears to be a stub"
-        
+
+    def name(self):
+        return self.__class__.__name__[1:]
+    
     def __str__(self):
-        prettyStr = "Package Name: " + self.__class__.__name__ + '\n'
+        prettyStr = "Package Name: " + self.name() + '\n'
         prettyStr += "Program Name: " + self.programName
         prettyStr += "Program Version Latest: " + self.latestVersion + "\n"
         prettyStr += "Program Version Installed: " + self.currentVersion + "\n"

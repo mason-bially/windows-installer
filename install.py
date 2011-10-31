@@ -16,10 +16,6 @@ class Command(command.BasePackageCommand):
         command.AttachDownloadArgument(self)
         
         self.ParseArgs(args)
-        
-    def Execute(self):
-        for package in self.packageManager.Packages():
-            self.ExecutePackage(package)
             
     def ExecutePackage(self, package):
         

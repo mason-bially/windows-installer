@@ -1,4 +1,4 @@
-import os, argparse, logging
+import os, argparse, logging, traceback, sys
 import packagemanager, ourlogging
 
 class Base():
@@ -74,11 +74,20 @@ class BasePackageCommand(Base):
                 self.packageManager.LoadPackages(None)
             else:
                 self.logger.debug("Loding no packages.")
-                self.packageManager.LoadPackages([])            
+                self.packageManager.LoadPackages([])
 
+
+    def ExecutePackages(self):
+        for package in self.packageManager.Packages():
+            try:
+                self.ExecutePackage(package)
+            except Exception as e:
+                self.logger.error("Package '" + package.name() + "' threw exception: \"" + str(e) + '"')
+                self.logger.debug("Full stacktrace:\n+" + "+".join(traceback.format_tb(sys.exc_info()[2])))
+            
         
     def Execute(self):
-        pass
+        self.ExecutePackages()
 
 #################################
 # Shared argument specifications

@@ -10,9 +10,7 @@ class Command(command.BasePackageCommand):
 
         self.ParseArgs(args)
 
-
-    def Execute(self):
-        for package in self.packageManager.Packages():
-            package.findLatestVersion()
-            print package
+    def ExecutePackage(self):
+        package.findLatestVersion()
+        print package
             
