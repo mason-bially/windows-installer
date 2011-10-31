@@ -9,14 +9,14 @@ class PackageException(Exception):
 
     def __str__(self):
         if isinstance(self.packages, list):
-            return Exception.__str__(self) + ":\nPackages: " + str(self.packages)
+            return Exception.__str__(self) + ": " + str(self.packages)
         elif self.inner != None and self.traceback != None:
             if self.packages != None:
-                return "".join(traceback.format_tb(self.traceback)) + "\n" + Exception.__str__(self) + ":\nPackage: " + str(self.packages) + "\n" + str(self.inner)
+                return "".join(traceback.format_tb(self.traceback)) + "\n" + Exception.__str__(self) + ": " + str(self.packages) + "\n" + str(self.inner)
             else:
-                return "".join(traceback.format_tb(self.traceback)) + "\n" + Exception.__str__(self) + ":\n" + str(self.inner)
+                return "".join(traceback.format_tb(self.traceback)) + "\n" + Exception.__str__(self) + "\n" + str(self.inner)
         elif self.packages != None:
-            return Exception.__str__(self) + ":\nPackage: " + str(self.packages)
+            return Exception.__str__(self) + ": " + str(self.packages)
 
 class PackageManager():
     def __init__(self):

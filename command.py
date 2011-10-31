@@ -1,15 +1,44 @@
-import os
-import packagemanager
-import argparse
+import os, argparse, logging
+import packagemanager, ourlogging
 
 class Base():
     """Base command class"""
     def __init__(self, argument_parser = {}):
         self.parser = argparse.ArgumentParser(**argument_parser)
         self.args = {}
+        self.logger = None
 
+        self.parser.add_argument('--debug', dest="debug",
+                                action='store_true',
+                                help="Enable debugging information")
+        self.parser.add_argument('-q', dest="quiet", default=0,
+                                action='store_const', const=1,
+                                help="Quiet info messages.")
+        self.parser.add_argument('-qq', dest="quiet", default=0,
+                                action='store_const', const=2,
+                                help="Quiet all extra messages.")
+        self.parser.add_argument('--log-file', dest="log-file",
+                                default='default.log',
+                                help="The output log file.")
+        
     def ParseArgs(self, args):
         self.args = vars(self.parser.parse_args(args))
+        loggingConfig = {}
+        
+        if not ourlogging.configured:
+            if self.args['debug']:
+                loggingConfig['debugInfo'] = True
+                loggingConfig['consoleLevel'] = logging.DEBUG  
+            elif self.args['quiet'] == 1:
+                loggingConfig['consoleLevel'] = logging.WARNING
+            elif self.args['quiet'] == 2:
+                loggingConfig['consoleLevel'] = logging.ERROR
+
+            loggingConfig['fileName'] = self.args['log-file']
+
+            ourlogging.config(**loggingConfig)
+
+        self.logger = ourlogging.commandLogger(self.parser.prog)
         
     def Execute(self):
         pass
@@ -36,12 +65,17 @@ class BasePackageCommand(Base):
     def ParseArgs(self, args):
         Base.ParseArgs(self, args)
         if self.args['packages'] != []:
+            self.logger.debug("Loding packages: " + str(self.args['packages']))
             self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
+
         else:
             if self.runAllPackagesDefault:
+                self.logger.debug("Loding all packages.")
                 self.packageManager.LoadPackages(None)
             else:
+                self.logger.debug("Loding no packages.")
                 self.packageManager.LoadPackages([])            
+
         
     def Execute(self):
         pass

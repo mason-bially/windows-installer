@@ -4,7 +4,7 @@
 # dependencies for a program.
 
 from ..utils import findHighestVersion,scrapePage,parsePage,downloadFile
-import ConfigParser, logging
+import ConfigParser, ourlogging
 
 import re, os
 from subprocess import call
@@ -15,9 +15,6 @@ class InstallError(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
-    
-
-logger = logging.getLogger(__name__)
 
 packageDir = "\\".join(__file__.split("\\")[:-3])
 
@@ -28,6 +25,8 @@ class Package:
     
     #Note: packageDir is the directory that the packages folder is located
     def __init__(self):
+        self.logger = ourlogging.packageLogger(self.__class__.__name__[1:])
+        
         self.programName = "" # Name of the program that the user sees
         self.arch = "" # 32bit or 64bit specified as x86 or x86_64
         self.url = "" # Main Website URL used as a last resort for searches
@@ -76,7 +75,7 @@ class Package:
             try:
                 self.__dict__[name] = config.get('main', name)
             except ConfigParser.NoOptionError as NoOption:
-                logger.log(1, ("Error Reading config for: " + self.__class__.__name__ + ": " + str(NoOption)))
+                self.logger.warning("Config read error: " + str(NoOption))
         
     def findVersionLocal(self):
         """Finds the local version of a program online.

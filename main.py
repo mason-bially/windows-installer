@@ -1,8 +1,6 @@
 import os
 import command, install, upgrade, fetch, version
-
-import command
-import packagemanager
+import packagemanager, ourlogging
 
 commandList = {
             "install":(install.Command,
@@ -46,7 +44,5 @@ if __name__ == "__main__":
     if len(os.sys.argv) == 1 or not commandLine.ValidCommand(argv):
         commandLine.Help()
     else:
-        try:
-            commandLine.Execute(argv)
-        except Exception as e:
-            print e
+        commandLine.Execute(argv)
+
