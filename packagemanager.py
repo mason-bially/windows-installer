@@ -21,16 +21,19 @@ class PackageException(Exception):
 class PackageManager():
     def __init__(self):
         self.packages = {}
-        self.allPackNames = {}
-
-    def LoadPackages(self, packageList = []):
-        #load packages from directory, filter for actual package directories, this could be gloablized
+        
+        #load packages from directory, filter for actual package directories
         self.allPackNames = [filename for filename in os.listdir('.\\packages\\')]
         self.allPackNames = filter(lambda x: x[0] == '_' and x[1] != '_', self.allPackNames)
 
-        if packageList == None:
-            packNames = self.allPackNames
-        elif packageList == []:
+    def LoadAllPackages(self):
+        self._loadPackages(self.allPackNames)
+    
+    def LoadInversePackages(self, packageList):
+        self._loadPackages(list(set(self.allPackNames) - set(packageList)))
+
+    def LoadPackages(self, packageList = []):
+        if packageList == []:
             packNames = []
         else:
             #intersect of packages that are in both
@@ -41,7 +44,12 @@ class PackageManager():
 
             if badPackages != []:
                 raise PackageException("Bad Packages", packages=badPackages)
+        
+        self._loadPackages(packNames)
 
+
+    def _loadPackages(self, packNames):
+        """This actually loads the packages, should never be called from outside this class"""
         __import__("packages", fromlist=packNames)
 
         for packName in packNames:

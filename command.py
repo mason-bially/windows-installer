@@ -52,12 +52,15 @@ class BasePackageCommand(Base):
         if 'runAllPackagesDefault' in self.__dict__ and self.runAllPackagesDefault:
             my_nargs = '*'
         else:
+            self.parser.add_argument('--invert-packages',
+                         action='store_true',
+                         help="Executes all packages, EXCPET those specified.")
             my_nargs = '+'
             self.runAllPackagesDefault = False
             
         self.parser.add_argument('packages', nargs=my_nargs,
                                  default=None,
-                                 help="list of packages to perform this action on")
+                                 help="List of packages to perform this action on.")
         
         self.packageManager = packagemanager.PackageManager()
         
@@ -71,7 +74,10 @@ class BasePackageCommand(Base):
         else:
             if self.runAllPackagesDefault:
                 self.logger.debug("Loding all packages.")
-                self.packageManager.LoadPackages(None)
+                self.packageManager.LoadAllPackages()
+            elif self.args['--invert-packages']:
+                self.logger.debug("Loding inverse of packages: " + str(self.args['packages']))
+                self.packageManager.LoadInversePackages(self.args['packages'])
             else:
                 self.logger.debug("Loding no packages.")
                 self.packageManager.LoadPackages([])
