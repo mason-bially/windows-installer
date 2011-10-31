@@ -5,7 +5,7 @@ class Functionality(command.Base):
     def ExecutePackage(self, package):
         self.logger.debug("Starting fetch functionality")
 
-        self.logger.info("Fetching package.")
+        self.logger.info("Fetching package '"+str(package)+"'.")
         package.download(self.args['dir'])
         
         self.logger.debug("Ending fetch functionality")

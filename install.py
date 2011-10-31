@@ -8,11 +8,10 @@ class Functionality(command.Base, fetch.Functionality):
         if not self.args['no-fetch']:
             fetch.Functionality.ExecutePackage(self, package)
 
-        self.logger.info("Installing package.")
+        self.logger.info("Installing package '"+str(package)+"'.")
         package.install(not 'show' in self.args['gui'], self.args['dir'])
         
         self.logger.debug("Ending install functionality")
-
 
 class Command(command.BasePackageCommand, Functionality):
     def __init__(self, args):
@@ -31,5 +30,24 @@ class Command(command.BasePackageCommand, Functionality):
         self.ParseArgs(args)
         self.PostArgInit()
 
-        
-            
+    def SortPackages(self, packages):
+        if self.args['gui'] == 'first':
+            sortedPackages = sorted(packages, key=lambda p: p.CanHideGui())
+        elif self.args['gui'] == 'last':
+            sortedPackages = sorted(packages, key=lambda p: not p.CanHideGui())
+        elif self.args['gui'] == 'only':
+            sortedPackages = filter(lambda p: not p.CanHideGui(), packages)
+        elif self.args['gui'] == 'none':
+            sortedPackages = filter(lambda p: p.CanHideGui(), packages)
+        else:
+            sortedPackages = packages
+
+        namedPackages = map(lambda p: p.name(), sortedPackages)
+
+        if (self.args['gui'] == 'only' or self.args['gui'] == 'none') and not set(packages).issubset(set(sortedPackages)):
+            #The gui option has sorted out information
+            self.logger.info("Filtered by gui option '"+self.args['gui']+"', only operating on packages: " + str(namedPackages))
+        else:
+            self.logger.debug("Resorted by gui option '"+self.args['gui']+"': " + str(namedPackages))
+
+        return sortedPackages

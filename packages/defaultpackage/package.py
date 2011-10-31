@@ -9,12 +9,12 @@ import ConfigParser, ourlogging
 import re, os
 from subprocess import call
 from BeautifulSoup import BeautifulSoup
-class InstallError(Exception):
-    
+class PackageError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
 
 packageDir = "\\".join(__file__.split("\\")[:-3])
 
@@ -25,38 +25,45 @@ class Package:
     
     #Note: packageDir is the directory that the packages folder is located
     def __init__(self):
-        self.logger = ourlogging.packageLogger(self.name())
-        
+        logger = ourlogging.packageLogger(self.name())
+
+        ### CONFIG ###
+        # These are values which may appear in a config File
         self.programName = "" # Name of the program that the user sees
         self.arch = "" # 32bit or 64bit specified as x86 or x86_64
         self.url = "" # Main Website URL used as a last resort for searches
         self.versionRegex = "" # Regular expression that matches version
         self.versionURL = "" # URL used to find latest version used before downloadURL to find version
-        #self.versionRegexPos = 0
         self.downloadURL = "" #Web URL to search for file used before URL to find 
         self.downloadRegex = "" #File to search for
         self.downloadLink = "" #To be used if a download link can be formed with just program Version
         self.downloadedPath = ""
         self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links if above fails
-        self.latestVersion = "" #Latest verison online
-        self.currentVersion = "" #currently installed version
         self.dependencies = []
         self.installMethod = "" # Installation method exe, msi, or zip
         self.installSilentArgs = "" # Arguments to pass to installer for silent install
-        self.installed = False
-        self.uninstalled = False
-        self.readConfig()
-        self.findVersionLocal()
         self.betaOK = "" # Has a value if beta versions are acceptable
         self.regVenderName = ""
         self.regProgName = ""
         self.regVersLocations = ['''SOFTWARE\Wow6432Node''',
                                 '''SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall''']
         
-    def readConfig(self):
+        ### LEAVE THIS LAST ###
+        self.readConfig(logger) 
+        ### END CONFIG ###
+        
+        self.logger = logger
+        
+        self.currentVersion="INVLAID_VERSION"
+        self.latestVersion = "" #Latest verison online
+        self.installed = False
+        self.uninstalled = False
+        
+    def readConfig(self,logger):
         """Reads the configuration file
         which must be named the same as the class"""
         global packageDir
+        
         # The config path is necessary to find the config file
         # because the cwd could change and we need to know where the module is located
         config = ConfigParser.RawConfigParser()
@@ -65,7 +72,8 @@ class Package:
         configpath = packageDir + "\\" + configpath.replace(".", "\\") + ".cfg"
         config.read(configpath)
         if configpath == []:
-            raise ConfigParser.Error("Config File could not be read path was: " + configpath)
+            raise PackageError("Config File could not be read; path was: " + configpath)
+        
         # Note One cannot itearate over a dict
         # and change its contents. Thus the following
         names = []
@@ -75,15 +83,16 @@ class Package:
             try:
                 self.__dict__[name] = config.get('main', name)
             except ConfigParser.NoOptionError as NoOption:
-                self.logger.debug("Config read error: " + str(NoOption))
+                logger.debug("Config read error: " + str(NoOption))
         
-    def findVersionLocal(self):
+    def findLocalVersion(self):
         """Finds the local version of a program online.
         Uses self.versionRegex to match all versions on self.versionURL"""
         self.currentVersion="INVLAID_VERSION"
         
     def findLatestVersion(self):
         """Attempts to find the latest version of a page """
+        self.logger.debug("Finding latest web version")
         try:
             url = ""
             regex = self.versionRegex
@@ -108,29 +117,50 @@ class Package:
             self.latestVersion = ret
             return ret
         except:
-            print 'unknown error running getWebVersion()'
-            raise
+            raise PackageError('unknown error running getWebVersion()')
         else:
             return ret
+
+    def fileName(self):
+        return self.__class__.__name__ + "-" + self.latestVersion
     
-    def download(self, directory):
-        """Downloads the latest version of a program"""
-        #TODO: Make this handle download errors gracefully
+    def fileNameWithoutVersion(self):
+        return self.__class__.__name__ + "-"
+    
+    def findFile(self, directory):
+        """Returns true and updates downloadFile if a file belonging to us in the directory exists."""
+        self.logger.debug("Checking for a downloaded file.")
         
-        #Check to see if findLatestVersion has been run
-        if self.latestVersion == "":
-            self.findLatestVersion()
-        #Check to see if file is already downloaded
+        #Don't bother looking if we already know where one is.
+        if self.downloadedPath != "" and self.downloadedPath.find(directory) != -1:
+            return True
+        
+        #Enumerate files, see if ours is there.
         for packageFile in os.listdir(directory):
-            filename = self.__class__.__name__ + "-" + self.latestVersion
+            filename = self.fileNameWithoutVersion()
             if packageFile.rfind(filename) != -1:
-                self.downloadedPath = directory + '/' + filename + '.' + packageFile.split(".")[-1]
-                break
-        #Dont redownload File if already downloaded
-        if self.downloadedPath != "":
-            return self.downloadedPath
+                self.downloadedPath = directory + '/' + packageFile
+                return True
+        return False
+
+    def findLatestFile(self, directory):
+        """Returns true and updates downloadFile if a file belonging to us in the directory exists."""
+        self.logger.debug("Checking for latest downloaded file.")
+
+        if self.latestVersion == "":
+            raise PackageError("Not enough information to determine latest downloaded file. Missing latest version.")
         
-        #Otherwise Download file
+        #Enumerate files, see if ours is there.
+        for packageFile in os.listdir(directory):
+            filename = self.fileName()
+            if packageFile.rfind(filename) != -1:
+                self.downloadedPath = directory + '/' + packageFile
+                return True
+        return False
+
+    def determineFileURL(self):
+        """Helper function to determine the download url"""
+        self.logger.debug("Determining download fileURL.")
         if self.downloadLink != '':
             self.downloadLink = self.parseVersionSyntax(self.downloadLink)
             fileURL = self.downloadLink
@@ -140,34 +170,54 @@ class Package:
         else:
             fileURL = parsePage(self.linkRegex, self.downloadURL)
         if not re.match(".*:.*", fileURL):
+            self.logger.debug("Adjusting unabsolute path")
             # If the path is not absolute we need to put the downloadURL on the front
             temp = self.downloadURL.split('/')[-1] # Find the last bit of downloadURL
             temp = self.downloadURL.rstrip(temp) # strip of everything up to /
             fileURL = temp + fileURL
-        fileName = self.__class__.__name__ + "-" + self.latestVersion
-        self.downloadedPath = downloadFile(fileURL, directory, fileName)
-        return self.downloadedPath
 
-    def install(self, quiet=False, downloadPath=""):
-        """Installs the latest version of a program"""
-        #TODO: add check to see if file is downloaded. If not download it
-        if self.downloadedPath == "":
-            self.download(downloadPath)
+        return fileURL
+    
+    def download(self, directory):
+        """Downloads the latest version of a program to directory"""
+        
+        if self.findLatestFile(directory):
+            self.logger.debug("File found in cache.")
+            return self.downloadedPath
+
+        #Otherwise Download file
+        fileURL = self.determineFileURL()
+        fileName = self.fileName()
+
+        self.logger.debug("Attempting to download file from '" + fileURL + "' as: '" + fileName + "'")
+        downloadedFilePath = downloadFile(fileURL, directory, fileName)
+        self.logger.debug("Finished downloading file to '" + downloadedFilePath + "'")
+        return downloadedFilePath
+
+
+    def install(self, hideGui=False, downloadPath=""):
+        """Installs the downloaded version of a program from downloadPath"""
+    
+        #Check to see if the needed file is already downloaded. Error otherwise.
+        if not self.findFile(downloadPath):
+            raise PackageError("No downloaded package to install with.")
         
         #Attempt to auto figure out Install method using path
         if self.installMethod == "":
             self.installMethod = self.downloadedPath.split(".")[-1].lower()
+            self.logger.debug("Discovered installation method: " + self.installMethod)
             
         #Call correct installation method
         if self.installMethod == "exe":
-            self.installExe()
+            self.installExe(hideGui, downloadPath)
         elif self.installMethod == "msi":
-            self.installMsi()
+            self.installMsi(hideGui, downloadPath)
         elif self.installMethod == "zip":
-            self.installZip()
+            self.installZip(hideGui, downloadPath)
         else:
-            raise InstallError("Installation Method Not supported")
-        
+            raise PackageError("Installation Method Not supported")
+
+       
     def uninstall(self):
         """Uninstalls a program"""
         print "Sorry This appears to be a stub"
@@ -176,11 +226,11 @@ class Package:
         return self.__class__.__name__[1:]
     
     def __str__(self):
-        prettyStr = "Package Name: " + self.name() + '\n'
-        prettyStr += "Program Name: " + self.programName
-        prettyStr += "Program Version Latest: " + self.latestVersion + "\n"
-        prettyStr += "Program Version Installed: " + self.currentVersion + "\n"
-        return prettyStr
+        return self.programName
+
+    def versionInformation(self):
+        return {'current': self.currentVersion,
+                'latest': self.latestVersion}
 
     def parseVersionSyntax(self, string):
         """Takes in a string an looks for #VERSION# and #DOTLESSVERSION# and deals with it"""
@@ -189,7 +239,7 @@ class Package:
         
         #Error Checking
         if self.latestVersion == "":
-            self.findLatestVersion()
+             raise PackageError("Not enough information to complete file replacement. Missing latest version.")
         
         if (string.find("#VERSION#") != -1):
             string = string.replace("#VERSION#", self.latestVersion)
@@ -214,19 +264,29 @@ class Package:
         #TODO: Add check to see if file is already even if the downloadedPath is null
         #This should search the download path for package downloads 
         if self.downloadedPath == "":
-            raise InstallError("Error no installation file downloaded")
+            raise PackageError("Error no installation file downloaded")
         #Change install arguments from a string to a list
         exec "self.installSilentArgs = " + self.installSilentArgs
         #Launch the installer with 
         call([self.downloadedPath].append(self.installSilentArgs))
     
     def installExe(self, quiet=False, downloadPath=""):
+        self.logger.debug("Attempting exe installation")
         self.installFork(quiet, downloadPath)
+        self.logger.debug("Finished exe installation")
     
     def installMsi(self, quiet=False, downloadPath=""):
         self.downloadedPath = self.downloadedPath.replace("/","\\");
         args = ["msiexec", "/qb", "/i", self.downloadedPath]
+        self.logger.debug("Attempting MSI installation")
         call(args)
+        self.logger.debug("Finished MSI installation")
     
     def installZip(self, quiet=False, downloadPath=""):
         print "This appears to be a stub"
+
+    def canHideGui(self):
+        """True if the gui is hideable, false otherwise"""
+        return not self.installSilentArgs == ""
+
+

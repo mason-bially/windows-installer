@@ -87,15 +87,15 @@ class BasePackageCommand(Base):
                 self.logger.debug("Loding inverse of packages: " + str(self.args['packages']))
                 self.packageManager.LoadInversePackages(self.args['packages'])
             else:
-                self.logger.debug("Loding no packages.")
+                self.logger.debug("Loading no packages.")
                 self.packageManager.LoadPackages([])
 
 
     def ExecutePackages(self):
-        for package in self.packageManager.Packages():
+        for package in self.SortPackages(self.packageManager.Packages()):
             try:
                 #This prepares the packages needed variables
-                self.logger.debug("Preparing package '" + package.name() + "'")
+                self.logger.debug("Preparing package '" + package.name() + "'.")
                 package.findLatestVersion()
 
                 #This calls the functionality related to each class
@@ -105,7 +105,9 @@ class BasePackageCommand(Base):
                 self.logger.error("Package '" + package.name() + "' threw exception: \"" + str(e) + '"')
                 self.logger.debug("Full stacktrace:\n+" + "+".join(traceback.format_tb(sys.exc_info()[2])))
             
-        
+    def SortPackages(self, packages):
+        return packages
+    
     def Execute(self):
         self.ExecutePackages()
 
