@@ -198,7 +198,7 @@ class Package:
         return downloadedFilePath
 
 
-    def install(self, hideGui=False, downloadPath=""):
+    def install(self, hideGui=True, downloadPath=""):
         """Installs the downloaded version of a program from downloadPath"""
     
         #Check to see if the needed file is already downloaded. Error otherwise.
@@ -263,7 +263,7 @@ class Package:
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
     
-    def installFork(self, quiet=False, downloadPath=""):
+    def installFork(self, quiet=True, downloadPath=""):
         if self.downloadedPath == "":
             raise PackageError("Error no installation file downloaded")
         #Change install arguments from a string to a list
@@ -273,14 +273,16 @@ class Package:
             exec "self.installSilentArgs = " + self.installSilentArgs
             args += self.installSilentArgs
         #Launch the installer
+        if call(args) != 0:
+            raise PackageError("Package Installation Failed")
 
     
-    def installExe(self, quiet=False, downloadPath=""):
+    def installExe(self, quiet=True, downloadPath=""):
         self.logger.debug("Attempting exe installation")
         self.installFork(quiet, downloadPath)
         self.logger.debug("Finished exe installation")
     
-    def installMsi(self, quiet=False, downloadPath=""):
+    def installMsi(self, quiet=True, downloadPath=""):
         self.downloadedPath = self.downloadedPath.replace("/","\\");
         if quiet:
             args = ["msiexec", "/qb", "/i", self.downloadedPath]
