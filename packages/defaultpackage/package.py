@@ -273,7 +273,7 @@ class Package:
             exec "self.installSilentArgs = " + self.installSilentArgs
             agrs += self.installSilentArgs
         #Launch the installer
-        call(args)
+
     
     def installExe(self, quiet=False, downloadPath=""):
         self.logger.debug("Attempting exe installation")
@@ -287,7 +287,8 @@ class Package:
         else:
             args = [self.downloadedPath]
         self.logger.debug("Attempting MSI installation")
-        call(args)
+        if call(args) != 0:
+            raise PackageError("Package Installation Failed")
         self.logger.debug("Finished MSI installation")
     
     def installZip(self, quiet=False, downloadPath=""):

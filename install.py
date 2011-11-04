@@ -48,5 +48,6 @@ class Command(fetch.Command, command.BasePackageCommand):
 
         self.logger.info("Installing package '"+str(package)+"'.")
         package.install(not 'show' in self.args['gui'], self.args['dir'])
+        self.logger.info("Successfully installed '"+str(package)+"'.")
         
         self.logger.debug("Ending install functionality")
