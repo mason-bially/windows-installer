@@ -268,8 +268,10 @@ class Package:
             raise PackageError("Error no installation file downloaded")
         #Change install arguments from a string to a list
         self.downloadedPath = self.downloadedPath.replace("/","\\");
-        exec "self.installSilentArgs = " + self.installSilentArgs
-        args=[self.downloadedPath] + self.installSilentArgs
+        args=[self.downloadedPath]
+        if quiet and self.installSilentArgs != "":
+            exec "self.installSilentArgs = " + self.installSilentArgs
+            agrs += self.installSilentArgs
         #Launch the installer
         call(args)
     
@@ -280,7 +282,10 @@ class Package:
     
     def installMsi(self, quiet=False, downloadPath=""):
         self.downloadedPath = self.downloadedPath.replace("/","\\");
-        args = ["msiexec", "/qb", "/i", self.downloadedPath]
+        if quiet:
+            args = ["msiexec", "/qb", "/i", self.downloadedPath]
+        else:
+            args = [self.downloadedPath]
         self.logger.debug("Attempting MSI installation")
         call(args)
         self.logger.debug("Finished MSI installation")

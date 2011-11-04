@@ -19,8 +19,6 @@ class Command(fetch.Command, command.BasePackageCommand):
                                 help="Skip fetching the installers. Missing installers will cause errors. Will attempt to use the latest local installer version."),
         
     def SortPackages(self, packages):
-        packages = fetch.Command.SortPackages(self, packages)
-        
         if self.args['gui'] == 'first':
             sortedPackages = sorted(packages, key=lambda p: p.CanHideGui())
         elif self.args['gui'] == 'last':
@@ -40,7 +38,7 @@ class Command(fetch.Command, command.BasePackageCommand):
         else:
             self.logger.debug("Resorted by gui option '"+self.args['gui']+"': " + str(namedPackages))
 
-        return sortedPackages
+        return fetch.Command.SortPackages(self, sortedPackages)
 
     def ExecutePackage(self, package):
         self.logger.debug("Starting install functionality")

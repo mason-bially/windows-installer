@@ -68,7 +68,7 @@ class BasePackageCommand(Base):
                                  default=None,
                                  help="List of packages to perform this action on.")
         
-        self.parser.add_argument('--all-except',
+        self.parser.add_argument('--all-except', dest='all-except',
                                  action='store_true',
                                  help="Executes all packages, EXCPET those specified.")
 
@@ -77,15 +77,16 @@ class BasePackageCommand(Base):
 
         #Set up package manager
         if self.args['packages'] != []:
-            self.logger.debug("Loding packages: " + str(self.args['packages']))
-            self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
+            if self.args['all-except']:
+                self.logger.debug("Loding all packages except: " + str(self.args['packages']))
+                self.packageManager.LoadInversePackages(self.args['packages'])
+            else:
+                self.logger.debug("Loding packages: " + str(self.args['packages']))
+                self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
         else:
             if self.invertDefault:
                 self.logger.debug("Loding all packages.")
                 self.packageManager.LoadAllPackages()
-            elif self.args['--all-except']:
-                self.logger.debug("Loding all packages except: " + str(self.args['packages']))
-                self.packageManager.LoadInversePackages(self.args['packages'])
             else:
                 self.logger.debug("Loading no packages.")
                 self.packageManager.LoadPackages([])
