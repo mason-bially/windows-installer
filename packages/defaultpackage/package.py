@@ -271,7 +271,7 @@ class Package:
         args=[self.downloadedPath]
         if quiet and self.installSilentArgs != "":
             exec "self.installSilentArgs = " + self.installSilentArgs
-            agrs += self.installSilentArgs
+            args += self.installSilentArgs
         #Launch the installer
 
     
