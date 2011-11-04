@@ -57,6 +57,10 @@ class Package:
         self.downloadedPath = ""
         self.installed = False
         self.uninstalled = False
+
+        #Get the dependencies as a list
+        if self.dependencies != []:
+            exec "self.dependencies = " + self.dependencies
         
     def readConfig(self,logger):
         """Reads the configuration file
@@ -260,14 +264,14 @@ class Package:
         print "Latest Version is: " + self.latestVersion
     
     def installFork(self, quiet=False, downloadPath=""):
-        #TODO: Add check to see if file is already even if the downloadedPath is null
-        #This should search the download path for package downloads 
         if self.downloadedPath == "":
             raise PackageError("Error no installation file downloaded")
         #Change install arguments from a string to a list
+        self.downloadedPath = self.downloadedPath.replace("/","\\");
         exec "self.installSilentArgs = " + self.installSilentArgs
-        #Launch the installer with 
-        call([self.downloadedPath].append(self.installSilentArgs))
+        args=[self.downloadedPath] + self.installSilentArgs
+        #Launch the installer
+        call(args)
     
     def installExe(self, quiet=False, downloadPath=""):
         self.logger.debug("Attempting exe installation")
@@ -287,4 +291,3 @@ class Package:
     def canHideGui(self):
         """True if the gui is hideable, false otherwise"""
         return not self.installSilentArgs == ""
-
