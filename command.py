@@ -76,13 +76,13 @@ class BasePackageCommand(Base):
         Base.PostParseArgs(self)
 
         #Set up package manager
-        if self.args['packages'] != []:
-            if self.args['all-except']:
-                self.logger.debug("Loding all packages except: " + str(self.args['packages']))
-                self.packageManager.LoadInversePackages(self.args['packages'])
-            else:
-                self.logger.debug("Loding packages: " + str(self.args['packages']))
-                self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
+        
+        if self.args['all-except']:
+            self.logger.debug("Loding all packages except: " + str(self.args['packages']))
+            self.packageManager.LoadInversePackages(self.args['packages'])
+        elif self.args['packages'] != []:
+            self.logger.debug("Loding packages: " + str(self.args['packages']))
+            self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
         else:
             if self.invertDefault:
                 self.logger.debug("Loding all packages.")
