@@ -20,13 +20,13 @@ class Command(fetch.Command, command.BasePackageCommand):
         
     def SortPackages(self, packages):
         if self.args['gui'] == 'first':
-            sortedPackages = sorted(packages, key=lambda p: p.CanHideGui())
+            sortedPackages = sorted(packages, key=lambda p: p.canHideGui())
         elif self.args['gui'] == 'last':
-            sortedPackages = sorted(packages, key=lambda p: not p.CanHideGui())
+            sortedPackages = sorted(packages, key=lambda p: not p.canHideGui())
         elif self.args['gui'] == 'only':
-            sortedPackages = filter(lambda p: not p.CanHideGui(), packages)
+            sortedPackages = filter(lambda p: not p.canHideGui(), packages)
         elif self.args['gui'] == 'none':
-            sortedPackages = filter(lambda p: p.CanHideGui(), packages)
+            sortedPackages = filter(lambda p: p.canHideGui(), packages)
         else:
             sortedPackages = packages
 
