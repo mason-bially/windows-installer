@@ -19,12 +19,13 @@ def config(consoleLevel=INFO, fileName='default.log', debugInfo=False):
     ch.setLevel(consoleLevel)
 
     #The formmatter
+    vf = Formatter('%(module)-14s:%(lineno)-3s ++ %(packageorcommand)-16s %(levelname)-8s - %(message)s')
+    f = Formatter('%(packageorcommand)-16s %(levelname)-8s - %(message)s')
     if debugInfo:
-        f = Formatter('%(module)-14s:%(lineno)-3s ++ %(packageorcommand)-16s %(levelname)-8s - %(message)s')
+        ch.setFormatter(vf)
     else:
-        f = Formatter('%(packageorcommand)-16s %(levelname)-8s - %(message)s')
-    ch.setFormatter(f)
-    fh.setFormatter(f)
+        ch.setFormatter(f)
+    fh.setFormatter(vf)
     
     rootLogger.addHandler(fh)
     rootLogger.addHandler(ch)

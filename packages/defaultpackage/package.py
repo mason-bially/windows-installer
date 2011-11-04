@@ -223,7 +223,7 @@ class Package:
        
     def uninstall(self):
         """Uninstalls a program"""
-        self.logger.critical("Uninstall not implemented")
+        self.logger.critical("uninstall not implemented")
 
     def name(self):
         return self.__class__.__name__[1:]
@@ -286,7 +286,7 @@ class Package:
         self.logger.debug("Finished MSI installation")
     
     def installZip(self, quiet=False, downloadPath=""):
-        print "This appears to be a stub"
+        self.logger.critical("installZip not implemented.")
 
     def canHideGui(self):
         """True if the gui is hideable, false otherwise"""

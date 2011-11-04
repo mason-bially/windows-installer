@@ -8,6 +8,7 @@ class Base():
         self.args = {}
         self.logger = None
 
+    def InitArgParse(self):
         self.parser.add_argument('--debug', dest="debug",
                                 action='store_true',
                                 help="Enable debugging information")
@@ -22,9 +23,11 @@ class Base():
                                 help="The output log file.")
         
     def ParseArgs(self, args):
+        self.InitArgParse() 
         self.args = vars(self.parser.parse_args(args))
-
-    def PostArgInit(self):
+        self.PostParseArgs()
+        
+    def PostParseArgs(self):
         loggingConfig = {}
 
         #Set up logging
@@ -53,51 +56,51 @@ class BasePackageCommand(Base):
     """Adds functionality to make package based commands easier to write"""
     def __init__(self, argument_parser = {}):
         Base.__init__(self, argument_parser)
+        self.invertDefault = False
+        self.packageManager = packagemanager.PackageManager()
 
-        #If this slot is set and true then the packages list is optional
-        if 'runAllPackagesDefault' in self.__dict__ and self.runAllPackagesDefault:
-            my_nargs = '*'
-        else:
-            self.parser.add_argument('--invert-packages',
-                         action='store_true',
-                         help="Executes all packages, EXCPET those specified.")
-            my_nargs = '+'
-            self.runAllPackagesDefault = False
-            
-        self.parser.add_argument('packages', nargs=my_nargs,
+    def InitInvertAllPackages(self):
+        self.invertDefault = True
+        
+    def InitArgParse(self):
+        Base.InitArgParse(self)
+        self.parser.add_argument('packages', nargs='*',
                                  default=None,
                                  help="List of packages to perform this action on.")
         
-        self.packageManager = packagemanager.PackageManager()
-        
+        self.parser.add_argument('--all-except',
+                                 action='store_true',
+                                 help="Executes all packages, EXCPET those specified.")
 
-    def PostArgInit(self):
-        Base.PostArgInit(self)
+    def PostParseArgs(self):
+        Base.PostParseArgs(self)
 
         #Set up package manager
         if self.args['packages'] != []:
             self.logger.debug("Loding packages: " + str(self.args['packages']))
             self.packageManager.LoadPackages(map(lambda x: '_'+x, self.args['packages']))
-
         else:
-            if self.runAllPackagesDefault:
+            if self.invertDefault:
                 self.logger.debug("Loding all packages.")
                 self.packageManager.LoadAllPackages()
-            elif self.args['--invert-packages']:
-                self.logger.debug("Loding inverse of packages: " + str(self.args['packages']))
+            elif self.args['--all-except']:
+                self.logger.debug("Loding all packages except: " + str(self.args['packages']))
                 self.packageManager.LoadInversePackages(self.args['packages'])
             else:
                 self.logger.debug("Loading no packages.")
                 self.packageManager.LoadPackages([])
 
+    def PreparePackage(self, package):
+        package.findLatestVersion()
 
     def ExecutePackages(self):
+        for package in self.packageManager.Packages():
+            #This prepares the packages needed variables
+            self.logger.debug("Preparing package '" + package.name() + "'.")
+            self.PreparePackage(package)
+        
         for package in self.SortPackages(self.packageManager.Packages()):
             try:
-                #This prepares the packages needed variables
-                self.logger.debug("Preparing package '" + package.name() + "'.")
-                package.findLatestVersion()
-
                 #This calls the functionality related to each class
                 self.logger.debug("Executing functionality for '" + package.name() + "'")
                 self.ExecutePackage(package)
@@ -119,3 +122,16 @@ def AttachDownloadArgument(self):
     self.parser.add_argument('-d', '--download-directory', dest="dir",
                             default="downloads",
                             help="Directory to download files to.")
+
+class AttachNoScrape(BasePackageCommand):
+    def InitArgParse(self):
+        BasePackageCommand.InitArgParse(self)
+        self.parser.add_argument('--no-scrape', dest="no-scrape",
+                                action='store_true',
+                                help="Prevent all web scraping.")
+
+    def PreparePackage(self, package):
+        if self.args['no-scrape']:
+            self.logger.debug("Preventing scrape for package '" + package.name() + "'.")
+        else:
+            BasePackageCommand.PreparePackage(self, package)
