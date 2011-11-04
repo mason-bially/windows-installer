@@ -37,7 +37,6 @@ class Package:
         self.downloadURL = "" #Web URL to search for file used before URL to find 
         self.downloadRegex = "" #File to search for
         self.downloadLink = "" #To be used if a download link can be formed with just program Version
-        self.downloadedPath = ""
         self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links if above fails
         self.dependencies = []
         self.installMethod = "" # Installation method exe, msi, or zip
@@ -53,9 +52,9 @@ class Package:
         ### END CONFIG ###
         
         self.logger = logger
-        
-        self.currentVersion="INVLAID_VERSION"
+        self.currentVersion = ""
         self.latestVersion = "" #Latest verison online
+        self.downloadedPath = ""
         self.installed = False
         self.uninstalled = False
         
@@ -88,7 +87,7 @@ class Package:
     def findLocalVersion(self):
         """Finds the local version of a program online.
         Uses self.versionRegex to match all versions on self.versionURL"""
-        self.currentVersion="INVLAID_VERSION"
+        self.currentVersion="Not Implemented"
         
     def findLatestVersion(self):
         """Attempts to find the latest version of a page """
@@ -220,7 +219,7 @@ class Package:
        
     def uninstall(self):
         """Uninstalls a program"""
-        print "Sorry This appears to be a stub"
+        self.logger.critical("Uninstall not implemented")
 
     def name(self):
         return self.__class__.__name__[1:]
@@ -288,5 +287,4 @@ class Package:
     def canHideGui(self):
         """True if the gui is hideable, false otherwise"""
         return not self.installSilentArgs == ""
-
 

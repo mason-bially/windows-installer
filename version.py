@@ -11,6 +11,10 @@ class Command(command.BasePackageCommand):
         self.ParseArgs(args)
         self.PostArgInit()
 
-    def ExecutePackage(self):
-        print package
+    def ExecutePackage(self, package):
+        version = package.versionInformation()
+        for (k, v) in version.items():
+            if v == "":
+                version[k] = '[Empty]'
+        self.logger.info(package.name() + "\n\tCurrent: " + version['current'] + "\n\tLatest:  " + version['latest'])
             
