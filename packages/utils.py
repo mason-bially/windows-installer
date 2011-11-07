@@ -67,10 +67,13 @@ def parsePage(reg, url):
         return links[0]['href']
     
 def downloadFile(URL, directory, fileName):
-    """Downloads a given URL to directory"""
+    """Downloads a given URL to directory
+    Returns a dict containing the downloadedPath and 
+    the url that was actually downloaded"""
     try:
         f = urllib2.urlopen(URL)
         fileContents = f.read()
+        actualURL = f.geturl()
         extension = "." + f.geturl().split(".")[-1]
         f.close()
         downloadpath = directory + '/' + fileName + extension
@@ -78,7 +81,7 @@ def downloadFile(URL, directory, fileName):
             directory = directory + "/"
         with open(downloadpath, "wb") as downloadedFile:
             downloadedFile.write(fileContents)
-        return downloadpath
+        return {'downloadedPath':downloadpath, 'actualURL': actualURL}
     except urllib2.HTTPError, e:
         print "ERROR DOWNLOADING: ", e.code, URL
         raise
