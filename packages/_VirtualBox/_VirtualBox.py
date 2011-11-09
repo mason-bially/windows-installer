@@ -1,11 +1,11 @@
 '''
-@author: Auresa Nyctea
+@author: 
 '''
 from ..defaultpackage.package import Package
 
 
 
-class __VirtualBox(Package):
+class _VirtualBox(Package):
 
 
     def __init__(self):
