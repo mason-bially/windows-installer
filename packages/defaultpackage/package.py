@@ -32,7 +32,8 @@ class Package:
         ### CONFIG ###
         # These are values which may appear in a config File
         self.programName = "" # Name of the program that the user sees
-        self.arch = "" # 32bit or 64bit specified as x86 or x86_64
+        self.arch = "" # 32bit or 64bit or both specified as x86 or x86_64 or both
+                       # Note: Both is for installers like virtualbox that work for both arch and auto select
         self.url = "" # Main Website URL used as a last resort for searches
         self.versionRegex = "" # Regular expression that matches version
         self.versionURL = "" # URL used to find latest version used before downloadURL to find version
@@ -40,19 +41,24 @@ class Package:
         self.downloadRegex = "" #File to search for
         self.downloadLink = "" #To be used if a download link can be formed with just program Version
         self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links if above fails
-        self.dependencies = []
+        self.dependencies = [] #Software that the program Has to have to run
+                               #Note: for dependencies that have options such as the Java Runtime Environment or Java Development kit
+                               #This can contain lists of lists: [["JDK", "JRE"] "FOO"]. This means that either the JDK or JRE are
+                               #Required but either will work and that the package FOO is required
+        self.recommended = [] #Software that the program runs better with (ex: camstudio and camstudio codecs)
         self.installMethod = "" # Installation method exe, msi, or zip
         self.installSilentArgs = "" # Arguments to pass to installer for silent install
         self.betaOK = "" # Has a value if beta versions are acceptable
-        self.regVenderName = ""
-        self.regProgName = ""
+        self.regVenderName = "" #Name of the vendor in the registry
+        self.regProgName = "" #Name of the program in the registry (defaults to programName)
         self.regVersLocations = ['''SOFTWARE\Wow6432Node''',
                                 '''SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall''']
         self.installDir = "" #Directory that files should be installed to auto fills in "Program Files" or "Program Files (x86)" 
         ### LEAVE THIS LAST ###
         self.readConfig(logger) 
         ### END CONFIG ###
-        
+
+        #These values are not read from the config file
         self.logger = logger
         self.currentVersion = "" #Currently installed version
         self.latestVersion = "" #Latest verison online
@@ -273,12 +279,16 @@ class Package:
         return self.downloadRegex
     
     def runTest(self):
+        """Runs a self diagnostic on the package. Note: this is basically depricated"""
+        #TODO: Check to be sure we can remove this. All functionality provied by this should be accessable
+        #via the command line.
         self.findLatestVersion()
         self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
         print "Currently Installed Version is: " + self.currentVersion
         print "Latest Version is: " + self.latestVersion
     
     def installFork(self, quiet=True, downloadPath=""):
+        #TODO: Merge this into installExe
         if self.downloadedPath == "":
             raise PackageError("Error no installation file downloaded")
         #Change install arguments from a string to a list
