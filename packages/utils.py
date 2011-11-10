@@ -50,8 +50,8 @@ def scrapePage(reg, url):
         return ret
 
 def parsePage(reg, url):
-    # TO DO: Figure out how to pick the correct link.
-    #        Just chooses first one now.
+    '''Takes in a url. Scans it for a <a> tags (links) and returns the one that matches
+        reg.'''
     try:
         page = urllib2.urlopen(url)
         soup = BeautifulSoup(page)
@@ -63,8 +63,25 @@ def parsePage(reg, url):
         raise
     else:
         #use linkRegex to find useful links, possible downloads
-        links = soup.fetch(lambda(x): x.name=='a' and re.search(reg, repr(x.string), re.IGNORECASE) != None)
-        return links[0]['href']
+        #Find all of the links on the page
+        links = soup.findAll('a')
+        correctLinks = []
+        #Find all of the links on a page that match reg
+        for item in links:
+            itemstr = str(item)
+            if re.findall(reg, itemstr, re.IGNORECASE) != []:
+                correctLinks.append(item)
+        if len(correctLinks) > 1:
+            #TODO: Handle this error correctly (really is more of a warning, link could be repeated on page"
+            print "NOTE: More than one download link was found"
+        link = correctLinks[0]['href']
+        if not re.match(".*:.*", link):
+            # If the path is not absolute we need to put the downloadURL on the front
+            temp = url.split('/')[-1] # Find the last bit of downloadURL
+            temp = url.rstrip(temp) # strip of everything up to /
+            fileURL = temp + link
+        print fileURL
+        return fileURL
     
 def downloadFile(URL, directory, fileName):
     """Downloads a given URL to directory

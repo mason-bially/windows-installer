@@ -184,6 +184,8 @@ class Package:
             self.downloadRegex = self.parseDownloadRegex()
             fileURL = scrapePage(self.downloadRegex, self.downloadURL)[0]
         else:
+            self.linkRegex = self.parseVersionSyntax(self.linkRegex)
+            self.downloadURL = self.parseVersionSyntax(self.downloadURL)
             fileURL = parsePage(self.linkRegex, self.downloadURL)
         if not re.match(".*:.*", fileURL):
             self.logger.debug("Adjusting unabsolute path")
@@ -206,7 +208,7 @@ class Package:
         fileName = self.fileName()
 
         self.logger.debug("Attempting to download file from '" + fileURL + "' as: '" + fileName + "'")
-        downloadedFilePath = downloadFile(fileURL, directory, fileName)
+        downloadedFilePath = downloadFile(fileURL, directory, fileName)['downloadedPath']
         self.logger.debug("Finished downloading file to '" + downloadedFilePath + "'")
         return downloadedFilePath
 
