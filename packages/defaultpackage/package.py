@@ -139,7 +139,7 @@ class Package:
             self.latestVersion = ret
             return ret
         except:
-            raise PackageError('unknown error running getWebVersion()')
+            raise #PackageError('unknown error running getWebVersion()')
         else:
             return ret
 
@@ -194,6 +194,8 @@ class Package:
             self.downloadURL = self.parseVersionSyntax(self.downloadURL)
             fileURL = parsePage(self.linkRegex, self.downloadURL)
         if not re.match(".*:.*", fileURL):
+            #TODO: Fix this - It doesn't cover the case where the link is /foo/bar
+            #Which should become: http://website.com/foo/bar
             self.logger.debug("Adjusting unabsolute path")
             # If the path is not absolute we need to put the downloadURL on the front
             temp = self.downloadURL.split('/')[-1] # Find the last bit of downloadURL

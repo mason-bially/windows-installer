@@ -75,14 +75,19 @@ def parsePage(reg, url):
             #TODO: Handle this error correctly (really is more of a warning, link could be repeated on page"
             print "NOTE: More than one download link was found"
         link = correctLinks[0]['href']
-        if not re.match(".*:.*", link):
-            # If the path is not absolute we need to put the downloadURL on the front
-            temp = url.split('/')[-1] # Find the last bit of downloadURL
-            temp = url.rstrip(temp) # strip of everything up to /
-            fileURL = temp + link
-        print fileURL
-        return fileURL
-    
+        if link[0] == "/":
+            temp = url.split("/")
+            baseURL = temp[0] + "//" + temp[2] +"/"
+            return baseURL
+        elif re.findall(".*://.*/", link) != []:
+            baseURL = url
+            if url[-1] != "/":
+                baseURL = baseURL + "/"
+            return baseURL + link
+        else:
+            return link
+
+        
 def downloadFile(URL, directory, fileName):
     """Downloads a given URL to directory
     Returns a dict containing the downloadedPath and 
@@ -127,7 +132,11 @@ def findGreaterCol(a, b):
             return b
     except ValueError:
         if a.upper() == 'FINAL':
-            return a
+            try:
+                int(b)
+                return b
+            except ValueError:
+                return a
         if b.upper() == "FINAL":
             return b
         if a.upper() == 'BETA' and b.upper() == "ALPHA":
