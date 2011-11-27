@@ -125,25 +125,37 @@ def findInString(string, wordList):
 def findGreaterCol(a, b):
     """Returns the greater of the two inputs
     Or either if they are equal"""
+    aIsNum = False
+    bIsNum = False
     try:
+        int(a)
+        aIsNum = True
+    except ValueError:
+        aIsNum = False
+    try:
+        int(b)
+        bIsNum = True
+    except ValueError:
+        bIsNum = False
+    if aIsNum and bIsNum:
         if int(a) > int(b):
             return a
         else:
             return b
-    except ValueError:
+    elif aIsNum and not bIsNum:
+        return a
+    elif not aIsNum and bIsNum:
+        return b
+    else:
         if a.upper() == 'FINAL':
-            try:
-                int(b)
-                return b
-            except ValueError:
-                return a
-        if b.upper() == "FINAL":
+            return a
+        elif b.upper == 'FINAL':
             return b
         if a.upper() == 'BETA' and b.upper() == "ALPHA":
             return a
-        else: #Otherwise a <= b so B is ok to return
+        else:
             return b
-            
+
 def breakVersions(versions):
     """Takes in a list of strings (versions) and returns a list of lists
     where each list represents a version number broken up.

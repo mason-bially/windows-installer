@@ -1,0 +1,2 @@
+If you test a package and it works please log it here with your name and date:
+notepad++ | Nov 27th 2011 | James Bucher
