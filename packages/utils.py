@@ -79,12 +79,12 @@ def parsePage(reg, url):
             temp = url.split("/")
             return temp[0] + link
         elif re.findall(".*://.*/", link) != []:
+            return link
+        else:
             baseURL = url
             if url[-1] != "/":
                 baseURL = baseURL + "/"
             return baseURL + link
-        else:
-            return link
 
         
 def downloadFile(URL, directory, fileName):
