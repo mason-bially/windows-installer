@@ -77,8 +77,7 @@ def parsePage(reg, url):
         link = correctLinks[0]['href']
         if link[0] == "/":
             temp = url.split("/")
-            baseURL = temp[0] + "//" + temp[2] +"/"
-            return baseURL
+            return temp[0] + link
         elif re.findall(".*://.*/", link) != []:
             baseURL = url
             if url[-1] != "/":
