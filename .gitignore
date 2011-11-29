@@ -5,3 +5,4 @@ session*
 *.pyc
 
 /default.log
+/packages/_ScreenRecorder
