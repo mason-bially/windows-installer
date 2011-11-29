@@ -273,6 +273,10 @@ class Package:
             string = string.replace("#VERSIONFIRST#", self.latestVersion.split('.')[0])
         if (string.find("#DOTLESSVERSION#") != -1):
             string = string.replace('#DOTLESSVERSION#', self.latestVersion.replace('.',''))
+        if (string.find("#LOWERCASEVERSION#") != -1):
+            string = string.replace('#LOWERCASEVERSION#', self.latestVersion.lower())
+        if (string.find("#UNDERSCOREVERSION#") != -1):
+            string = string.replace('#UNDERSCOREVERSION#', self.latestVersion.replace('.','_'))
         return string
     
     def parseDownloadRegex(self):
