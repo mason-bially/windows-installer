@@ -127,6 +127,8 @@ class Package:
             elif self.url != "":
                 url = self.url
             versions = scrapePage(regex, url)
+            print self.versionRegex
+            print versions
             if self.betaOK == "":
                 versionsTemp = []
                 for version in versions:
@@ -134,7 +136,8 @@ class Package:
                         versionsTemp.append(version)
                 versions = versionsTemp
             # Filter out blanks
-            versions = filter(lambda a: a != '', versions)
+            #versions = filter(lambda a: a != '', versions)
+            # Remove characters such as "(" 
             ret = findHighestVersion(versions)
             self.latestVersion = ret
             return ret

@@ -170,8 +170,8 @@ def breakVersions(versions):
         tempVersion = [x.rstrip().lstrip() for x in tempVersion]
         #Check for beta or alpha
         lastPos = len(tempVersion) - 1
-        hasBetaAlpha = findInString(tempVersion[lastPos], ["BETA", "ALPHA"])
-        if hasBetaAlpha != False:
+        hasBetaAlphaRC = findInString(tempVersion[lastPos], ["BETA", "ALPHA", "RC"])
+        if hasBetaAlphaRC != False:
             lastPosStr = tempVersion[lastPos]
             tempVersion.pop(lastPos)
             #Catch case where alpha is the only version
@@ -181,6 +181,55 @@ def breakVersions(versions):
         else:
             tempVersion.append("FINAL")
         versionsSplit.append(tempVersion)
+    return versionsSplit
+
+def splitOnChars(string, splitChars):
+    collector = [string]
+    for char in splitChars:
+        temp = []
+        for string in collector:
+            for item in string.split(char):
+                temp.append(item)
+        collector = temp
+    return collector
+
+def stripChars(string, chars):
+    temp = []
+    charset = set(chars)
+    for char in string:
+        if char in charset:
+            temp.append(char)
+    return "".join(temp)
+
+def newbreakVersions(versions):
+    """Takes in a list of strings (versions) and returns a list of lists
+    where each list represents a version number broken up.
+    For example "1.2.3 beta" will become ["1","2","3","BETA"]"""
+    versionsSplit = []
+    tempVersion = ""
+    #Filter out blanks, They are not valid versions
+    versions = filter(lambda a: a != '', versions)
+    #Filter out invalid chars
+    temp = []
+    for version in versions:
+        version = version.upper()
+        stripped = stripChars(version, "1234567890 BETA RC ALPHA.-_")
+        temp.append(stripped)
+    versionsSplit = temp
+    temp = []
+    #Break up versions and remove extra white space
+    for version in versionsSplit:
+        tempstr = splitOnChars(version, ". -_")
+        stripped = filter(lambda a: a.strip(), tempstr)
+        temp.append(stripped)
+    versionsSplit = temp
+    temp = []
+    for version in versionsSplit:
+        hasBetaAlphaRC = findInString(version[-1], ["BETA", "ALPHA", "RC"])
+        if not hasBetaAlphaRC:
+            version.append("FINAL")
+        temp.append(version)
+    versionsSplit = temp
     return versionsSplit
 
 def brokenVersionToStr(versions):
@@ -208,6 +257,8 @@ def findHighestVersion(versions):
     # Do some fancy foot-work to make sure
     # There are no duplicates in versions
     # So helper function won't recurse forever
+    print "TEST"
+    print newbreakVersions(versions)
     tempList = breakVersions(versions)
     tempList = brokenVersionToStr(tempList)
     tempList = list(set(tempList))
