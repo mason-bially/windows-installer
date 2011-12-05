@@ -51,6 +51,9 @@ def scrapePage(reg, url):
         return ret
         
 def flattenTag(tagList):
+    """Strips out HTML tags so that we can process just the text that
+    shows up on the screen. Takes in a list of beautiful soup tags and strings.
+    Returns a string with the HTML tags stripped out."""
     try:
         if len(tagList.contents) == 1:
             return str(tagList.contents[0])
@@ -63,8 +66,7 @@ def flattenTag(tagList):
         return str(tagList)
 
 def parsePage(reg, url):
-    '''Takes in a url. Scans it for a <a> tags (links) and returns the one that matches
-        reg.'''
+    '''Takes in a url. Scans it for <a> tags (links) and returns the one that matches reg.'''
     try:
         page = urllib2.urlopen(url)
         soup = BeautifulSoup(page)
@@ -86,37 +88,47 @@ def parsePage(reg, url):
             if re.findall(reg, itemstr, re.IGNORECASE) != []:
                 correctLinks.append(item)
         if len(correctLinks) > 1:
-            #TODO: Handle this error correctly (really is more of a warning, link could be repeated on page"
+            #TODO: Handle this error correctly (really is more of a warning, link could be repeated on page)
             print "NOTE: More than one download link was found"
             print correctLinks
         link = correctLinks[0]['href']
+        #The following code handles links correctly don't mess with
+        #this unless you know what you are doing
+        #A link can come in the following forms:
+        # http://foo.bar/absolute/path
+        # /relative/to/server/root
+        # relative/to/current/path
         if re.findall(".*://.*/", link) != []:
             return link
         else:
-            #Handle cases where link is specified as a relative dir or an absolute dir but no http://
             baseURL = url
+            #Handle case where url is absolute /relative/to/server root
             if link[0] == "/":
-                baseURL = "/".join(baseURL.split("/")[:3]) + "/"
-                return baseURL + link[1:]
-            else:
+                baseURL = "/".join(baseURL.split("/")[:3])
+                return baseURL + link
+            else: #Handle case where url is relative relative/to/current/path
                 return baseURL + link
 
         
 def downloadFile(URL, directory, fileName):
     """Downloads a given URL to directory
     Returns a dict containing the downloadedPath and 
-    the url that was actually downloaded"""
+    the url that was actually downloaded:
+    {'downloadedPath': downloadPath, 'actualURL': actualURL}"""
     try:
         f = urllib2.urlopen(URL)
         fileContents = f.read()
         actualURL = f.geturl()
+        #Get the extension from the url we downloaded
         extension = "." + f.geturl().split(".")[-1]
         f.close()
+        #TODO: Clean up the following code, its kinda messy
         downloadpath = directory + '/' + fileName + extension
         if not directory.endswith("/"):
             directory = directory + "/"
         with open(downloadpath, "wb") as downloadedFile:
             downloadedFile.write(fileContents)
+        #TODO: End code to be cleaned
         return {'downloadedPath':downloadpath, 'actualURL': actualURL}
     except urllib2.HTTPError, e:
         print "ERROR DOWNLOADING: ", e.code, URL
@@ -174,6 +186,9 @@ def findGreaterCol(a, b):
             return b
 
 def splitOnChars(string, splitChars):
+    """Splits a string based upon multiple characters. For example
+    splitOnChars('hello-world.foo', '-.') returns:
+    ['hello', 'world', 'foo']"""
     collector = [string]
     for char in splitChars:
         temp = []
@@ -184,6 +199,7 @@ def splitOnChars(string, splitChars):
     return collector
 
 def stripChars(string, chars):
+    """strips chars from the string string"""
     temp = []
     charset = set(chars)
     for char in string:
@@ -214,6 +230,7 @@ def breakVersions(versions):
         temp.append(stripped)
     versionsSplit = temp
     temp = []
+    #Append FINAL to strings that need it (so 2.2 is a higher version than 2.2 BETA
     for version in versionsSplit:
         hasBetaAlphaRC = findInString(version[-1], ["BETA", "ALPHA", "RC"])
         if not hasBetaAlphaRC:
@@ -252,12 +269,16 @@ def sanitizeVersions(versions):
     
 def findHighestVersion(versions):
     """Takes in a list of strings and returns the highest version formatted in a standard format:
-    1.2.3 [ALPHA|BETA]"""
+    1.2.3 [ALPHA|BETA|RC[0-9]]"""
     # Make sure to sanitize 
     tempList = sanitizeVersions(versions)
     return findHighestVersionHelper(tempList,0)
     
 def findHighestVersionHelper(versions, col):
+    #Don't mess with the following code. If there is a problem sorting
+    #versions then the function findGreaterCol probably has a bug.
+    #In other words: Here there be dragons, don't mess with them
+    #unless you know what you are doing.
     if len(versions) == 1:
         return brokenVersionToStr(versions)[0]
     else:
@@ -272,11 +293,12 @@ def findHighestVersionHelper(versions, col):
 
 def findInstalledVersions(pak):
     """Takes in a package and attempts to find the installed version(s) If the package is installed."""
+    #TODO: Fill in this function
     print "Sorry this appears to be a stub."
     
     
 def findVersionsReg(pak):
     """Takes in a package and attempts to find version(s) in the registry"""
     # Attempt to find the version in the Uninstall Directory of the registry
-    
+    #TODO: Implement this function
     print "Sorry THis appears to be a stub"

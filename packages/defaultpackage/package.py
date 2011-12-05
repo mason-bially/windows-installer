@@ -31,22 +31,21 @@ class Package:
 
         ### CONFIG ###
         # These are values which may appear in a config File
-        self.programName = "" # Name of the program that the user sees
+        self.programName = "" # Name of the program that the user sees Used mostly for documenation purposes
         self.arch = "" # 32bit or 64bit or both specified as x86 or x86_64 or both
                        # Note: Both is for installers like virtualbox that work for both arch and auto select
         self.url = "" # Main Website URL used as a last resort for searches
-        self.versionRegex = "" # Regular expression that matches version
+        self.versionRegex = "" # Regular expression that matches versions on a page
         self.versionURL = "" # URL used to find latest version used before downloadURL to find version
-        self.downloadURL = "" # URL used to find the download for a file 
-        self.downloadRegex = "" #File to search for
-        #self.downloadLink = "" #To be used if a download link can be formed with just program Version
-        self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links if above fails
+        self.downloadURL = "" # URL used to find the download for a file
+        self.downloadRegex = "" #File to search for (This is depricated and is kept only for legacy purposes)
+        self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links
         self.dependencies = [] #Software that the program Has to have to run
                                #Note: for dependencies that have options such as the Java Runtime Environment or Java Development kit
                                #This can contain lists of lists: [["JDK", "JRE"] "FOO"]. This means that either the JDK or JRE are
                                #Required but either will work and that the package FOO is required
         self.recommended = [] #Software that the program runs better with (ex: camstudio and camstudio codecs)
-        self.installMethod = "" # Installation method exe, msi, or zip
+        self.installMethod = "" # Installation method exe, msi, or zip (Normally auto determined)
         self.installSilentArgs = "" # Arguments to pass to installer for silent install
         self.betaOK = "" # Has a value if beta versions are acceptable
         self.alphaOK = "" # Has a value if alpha versions are acceptable
@@ -54,8 +53,9 @@ class Package:
         self.regVenderName = "" #Name of the vendor in the registry
         self.regProgName = "" #Name of the program in the registry (defaults to programName)
         self.regVersLocations = ['''SOFTWARE\Wow6432Node''',
-                                '''SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall''']
-        self.installDir = "" #Directory that files should be installed to auto fills in "Program Files" or "Program Files (x86)" 
+                                '''SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall'''] #These are not quite correct but close
+        self.installDir = "" #Directory that files should be installed to auto fills in "Program Files" or "Program Files (x86)"
+                             #Should be handled scanning arch but if more flexability is needed then it can be specified
         ### LEAVE THIS LAST ###
         self.readConfig(logger) 
         ### END CONFIG ###
@@ -83,6 +83,7 @@ class Package:
         #Get the dependencies as a list
         if self.dependencies != [] and self.dependencies != "":
             exec "self.dependencies = " + self.dependencies
+        #TODO: add code to exec recommended
         
     def readConfig(self,logger):
         """Reads the configuration file
@@ -91,6 +92,7 @@ class Package:
         
         # The config path is necessary to find the config file
         # because the cwd could change and we need to know where the module is located
+        # There be dragons in the following code
         config = ConfigParser.RawConfigParser()
         packageDir = packageDir.rstrip("\\") #clean input just in case
         configpath = str(self.__class__).rstrip(self.__class__.__name__).rstrip(".")
@@ -113,6 +115,7 @@ class Package:
     def findLocalVersion(self):
         """Finds the local version of a program online.
         Uses self.versionRegex to match all versions on self.versionURL"""
+        #TODO: implement me
         self.currentVersion="Not Implemented"
         
     def findLatestVersion(self):
@@ -132,15 +135,16 @@ class Package:
             self.logger.debug("Scraping page: " + url + " with " + regex)
             versions = scrapePage(regex, url)
             self.logger.debug("Versions Found: " + str(versions))
+            # Remove beta versions if we don't allow them
+            # TODO: remove RC and ALPHA versions as well
             if self.betaOK == "":
                 versionsTemp = []
                 for version in versions:
                     if re.search("beta",version) == None:
                         versionsTemp.append(version)
                 versions = versionsTemp
-            # Filter out blanks
-            #versions = filter(lambda a: a != '', versions)
-            # Remove characters such as "(" 
+            # findHighestVesion sanitizes its own input
+            # so we don't do that here
             ret = findHighestVersion(versions)
             self.latestVersion = ret
             return ret
@@ -150,13 +154,14 @@ class Package:
             return ret
 
     def fileName(self):
+        """Returns the name of the file as it is downladed (just the filename not the path)"""
         return self.__class__.__name__ + "-" + self.latestVersion
     
     def fileNameWithoutVersion(self):
         return self.__class__.__name__ + "-"
     
     def findFile(self, directory):
-        """Returns true and updates downloadFile if a file belonging to us in the directory exists."""
+        """Returns true and updates self.downloadedPath if any version of a package is found in directory"""
         self.logger.debug("Checking for a downloaded file.")
         
         #Don't bother looking if we already know where one is.
@@ -172,7 +177,7 @@ class Package:
         return False
 
     def findLatestFile(self, directory):
-        """Returns true and updates downloadFile if a file belonging to us in the directory exists."""
+        """Returns true and updates self.downloadedPath if a file belonging to us in the directory exists."""
         self.logger.debug("Checking for latest downloaded file.")
 
         if self.latestVersion == "":
@@ -189,17 +194,23 @@ class Package:
     def determineFileURL(self):
         """Helper function to determine the download url"""
         self.logger.debug("Determining download fileURL.")
+        #Fill in #VERSION# if it is part of the downloadURL
         self.downloadURL = self.parseVersionSyntax(self.downloadURL)
+        #If downloadRegex is specified use it
+        #TODO: Remove this, its depricated
         if self.downloadRegex != "":
             self.downloadRegex = self.parseDownloadRegex()
             fileURL = scrapePage(self.downloadRegex, self.downloadURL)[0]
+        #Search the page for the correct download Link
         elif self.linkRegex != '':
             self.linkRegex = self.parseVersionSyntax(self.linkRegex)
             self.downloadURL = self.parseVersionSyntax(self.downloadURL)
             self.logger.debug("Scraping: " + self.downloadURL + " with " + self.linkRegex + " for download link.")
             fileURL = parsePage(self.linkRegex, self.downloadURL)
+        #Otherwise parsing the version syntax was all that was needed
         else:
             fileURL = self.downloadURL
+        #TODO: Remove the following code (shouldn't be necessary but don't have time to test)
         if not re.match(".*:.*", fileURL):
             #TODO: Fix this - It doesn't cover the case where the link is /foo/bar
             #Which should become: http://website.com/foo/bar
@@ -208,6 +219,7 @@ class Package:
             temp = self.downloadURL.split('/')[-1] # Find the last bit of downloadURL
             temp = self.downloadURL.rstrip(temp) # strip of everything up to /
             fileURL = temp + fileURL
+        #TODO: End code removal
         return fileURL
     
     def download(self, directory):
@@ -221,8 +233,7 @@ class Package:
         try:
             fileURL = self.determineFileURL()
         except:
-            self.logger.info("Unable to determine fileURL. This means the download link was not found when searching the page")
-            raise
+            raise PackageError("Unable to determine fileURL. This means the linkRegex was not found when searching the page")
         fileName = self.fileName()
 
         self.logger.debug("Attempting to download file from '" + fileURL + "' as: '" + fileName + "'")
@@ -257,6 +268,7 @@ class Package:
     def uninstall(self):
         """Uninstalls a program"""
         self.logger.critical("uninstall not implemented")
+        raise PackageError("Uninstall Not Implemented Yet")
 
     def name(self):
         return self.__class__.__name__[1:]
@@ -293,47 +305,45 @@ class Package:
         """Takes in the filename specified in a package config and gets rid of #VERSION#"""
         self.downloadRegex = self.parseVersionSyntax(self.downloadRegex)
         return self.downloadRegex
-    
-    def runTest(self):
-        """Runs a self diagnostic on the package. Note: this is basically depricated"""
-        #TODO: Check to be sure we can remove this. All functionality provied by this should be accessable
-        #via the command line.
-        self.findLatestVersion()
-        self.download("""C:/Users/James Bucher/Downloads/Download-Test/""")
-        print "Currently Installed Version is: " + self.currentVersion
-        print "Latest Version is: " + self.latestVersion
-    
-    def installFork(self, quiet=True, downloadPath=""):
-        #TODO: Merge this into installExe
-        if self.downloadedPath == "":
-            raise PackageError("Error no installation file downloaded")
-        #Change install arguments from a string to a list
-        self.downloadedPath = self.downloadedPath.replace("/","\\");
-        args=[self.downloadedPath]
-        if quiet and self.installSilentArgs != "":
-            exec "self.installSilentArgs = " + self.installSilentArgs
-            args += self.installSilentArgs
-        #Launch the installer
-        if call(args) != 0:
-            raise PackageError("Package Installation Failed")
-
+        
     
     def installExe(self, quiet=True, downloadPath=""):
         self.logger.debug("Attempting exe installation")
-        self.installFork(quiet, downloadPath)
+        
+        if self.downloadedPath == "":
+            raise PackageError("Error no installation file downloaded")
+        
+        #Replace \ in path to / so things work correctly (stupid backslashes)
+        self.downloadedPath = self.downloadedPath.replace("/","\\");
+        args=[self.downloadedPath]
+        
+        #Make installer quiet if needed
+        if quiet and self.installSilentArgs != "":
+            exec "self.installSilentArgs = " + self.installSilentArgs
+            args += self.installSilentArgs
+        
+        #Launch the installer
+        if call(args) != 0:
+            raise PackageError("Package Installation Failed, Installer returned error")
         self.logger.debug("Finished exe installation")
     
     def installMsi(self, quiet=True, downloadPath=""):
         if self.downloadedPath == "":
             raise PackageError("Error no installation file downloaded")
+        
+        #Clean up path (stupid backslashes)
         self.downloadedPath = self.downloadedPath.replace("/","\\");
+        
+        #Make the install quiet if needed
         if quiet:
             args = ["msiexec", "/qb", "/i", self.downloadedPath]
         else:
             args = [self.downloadedPath]
         self.logger.debug("Attempting MSI installation")
+        
+        #Launch the installer
         if call(args) != 0:
-            raise PackageError("Package Installation Failed")
+            raise PackageError("Package Installation Failed, Installer returned error")
         self.logger.debug("Finished MSI installation")
     
     def installZip(self, quiet=False, downloadPath=""):

@@ -1,9 +1,5 @@
 '''
-VLC package class
-
-Created on Oct 6, 2011
-
-@author: levienk
+@author: Kyle
 '''
 from ..defaultpackage.package import Package
 
