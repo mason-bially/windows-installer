@@ -1,5 +1,6 @@
 import urllib2
 import re
+import calendar
 from BeautifulSoup import BeautifulSoup
 
 def getPage(url):
@@ -74,6 +75,7 @@ def parsePage(reg, url):
         if len(correctLinks) > 1:
             #TODO: Handle this error correctly (really is more of a warning, link could be repeated on page"
             print "NOTE: More than one download link was found"
+            print correctLinks
         link = correctLinks[0]['href']
         if link[0] == "/":
             temp = url.split("/")
@@ -123,7 +125,10 @@ def findInString(string, wordList):
     
 def findGreaterCol(a, b):
     """Returns the greater of the two inputs
-    Or either if they are equal"""
+    Or either if they are equal. A special function
+    is needed for this since versions can contain:
+    Numbers,ALPHA, BETA, and RC (Release Candidates)"""
+    #TODO: Make this handle RC (release canidates)
     aIsNum = False
     bIsNum = False
     try:
@@ -155,34 +160,6 @@ def findGreaterCol(a, b):
         else:
             return b
 
-def breakVersions(versions):
-    """Takes in a list of strings (versions) and returns a list of lists
-    where each list represents a version number broken up.
-    For example "1.2.3 beta" will become ["1","2","3","BETA"]"""
-    versionsSplit = []
-    tempVersion = ""
-    # Filter out blanks, they are not valid versions
-    versions = filter(lambda a: a != '', versions)
-    for version in versions:
-        #Sanitize input by removing white space from start and end
-        tempVersion = version.upper()
-        tempVersion = tempVersion.split('.')
-        tempVersion = [x.rstrip().lstrip() for x in tempVersion]
-        #Check for beta or alpha
-        lastPos = len(tempVersion) - 1
-        hasBetaAlphaRC = findInString(tempVersion[lastPos], ["BETA", "ALPHA", "RC"])
-        if hasBetaAlphaRC != False:
-            lastPosStr = tempVersion[lastPos]
-            tempVersion.pop(lastPos)
-            #Catch case where alpha is the only version
-            if tempVersion != []:
-                tempVersion.append(lastPosStr.rstrip(hasBetaAlpha).rstrip())
-            tempVersion.append(hasBetaAlpha)
-        else:
-            tempVersion.append("FINAL")
-        versionsSplit.append(tempVersion)
-    return versionsSplit
-
 def splitOnChars(string, splitChars):
     collector = [string]
     for char in splitChars:
@@ -201,7 +178,7 @@ def stripChars(string, chars):
             temp.append(char)
     return "".join(temp)
 
-def newbreakVersions(versions):
+def breakVersions(versions):
     """Takes in a list of strings (versions) and returns a list of lists
     where each list represents a version number broken up.
     For example "1.2.3 beta" will become ["1","2","3","BETA"]"""
@@ -257,8 +234,6 @@ def findHighestVersion(versions):
     # Do some fancy foot-work to make sure
     # There are no duplicates in versions
     # So helper function won't recurse forever
-    print "TEST"
-    print newbreakVersions(versions)
     tempList = breakVersions(versions)
     tempList = brokenVersionToStr(tempList)
     tempList = list(set(tempList))
