@@ -49,6 +49,18 @@ def scrapePage(reg, url):
             print "No Matches for '%s' found on '%s'" % (reg, url)
             raise IndexError("No Matches found on page")
         return ret
+        
+def flattenTag(tagList):
+    try:
+        if len(tagList.contents) == 1:
+            return str(tagList.contents[0])
+        else:
+            collector = []
+            for item in tagList.contents:
+                collector += flattenTag(item)
+            return "".join(collector)
+    except:
+        return str(tagList)
 
 def parsePage(reg, url):
     '''Takes in a url. Scans it for a <a> tags (links) and returns the one that matches
@@ -69,7 +81,8 @@ def parsePage(reg, url):
         correctLinks = []
         #Find all of the links on a page that match reg
         for item in links:
-            itemstr = str(item)
+            #itemstr = str(item.contents[0])
+            itemstr = flattenTag(item)
             if re.findall(reg, itemstr, re.IGNORECASE) != []:
                 correctLinks.append(item)
         if len(correctLinks) > 1:
@@ -77,16 +90,16 @@ def parsePage(reg, url):
             print "NOTE: More than one download link was found"
             print correctLinks
         link = correctLinks[0]['href']
-        if link[0] == "/":
-            temp = url.split("/")
-            return temp[0] + link
-        elif re.findall(".*://.*/", link) != []:
+        if re.findall(".*://.*/", link) != []:
             return link
         else:
+            #Handle cases where link is specified as a relative dir or an absolute dir but no http://
             baseURL = url
-            if url[-1] != "/":
-                baseURL = baseURL + "/"
-            return baseURL + link
+            if link[0] == "/":
+                baseURL = "/".join(baseURL.split("/")[:3]) + "/"
+                return baseURL + link[1:]
+            else:
+                return baseURL + link
 
         
 def downloadFile(URL, directory, fileName):
@@ -227,17 +240,21 @@ def brokenVersionToStr(versions):
                 returnStr = element
         returnList.append(returnStr)
     return returnList
-    
-def findHighestVersion(versions):
-    """Takes in a list of strings and returns the highest version formatted in a standard format:
-    1.2.3 [ALPHA|BETA]"""
-    # Do some fancy foot-work to make sure
-    # There are no duplicates in versions
-    # So helper function won't recurse forever
+
+def sanitizeVersions(versions):
+    """Takes in a list of versions and removes duplicates and splits
+    them into a format sutible for processing"""
     tempList = breakVersions(versions)
     tempList = brokenVersionToStr(tempList)
     tempList = list(set(tempList))
     tempList = breakVersions(tempList)
+    return tempList
+    
+def findHighestVersion(versions):
+    """Takes in a list of strings and returns the highest version formatted in a standard format:
+    1.2.3 [ALPHA|BETA]"""
+    # Make sure to sanitize 
+    tempList = sanitizeVersions(versions)
     return findHighestVersionHelper(tempList,0)
     
 def findHighestVersionHelper(versions, col):

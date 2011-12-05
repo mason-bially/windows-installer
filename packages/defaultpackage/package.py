@@ -37,9 +37,9 @@ class Package:
         self.url = "" # Main Website URL used as a last resort for searches
         self.versionRegex = "" # Regular expression that matches version
         self.versionURL = "" # URL used to find latest version used before downloadURL to find version
-        self.downloadURL = "" #Web URL to search for file used before URL to find 
+        self.downloadURL = "" # URL used to find the download for a file 
         self.downloadRegex = "" #File to search for
-        self.downloadLink = "" #To be used if a download link can be formed with just program Version
+        #self.downloadLink = "" #To be used if a download link can be formed with just program Version
         self.linkRegex = "" #To be used with Beautiful Soup to scan a page for probable download links if above fails
         self.dependencies = [] #Software that the program Has to have to run
                                #Note: for dependencies that have options such as the Java Runtime Environment or Java Development kit
@@ -49,6 +49,8 @@ class Package:
         self.installMethod = "" # Installation method exe, msi, or zip
         self.installSilentArgs = "" # Arguments to pass to installer for silent install
         self.betaOK = "" # Has a value if beta versions are acceptable
+        self.alphaOK = "" # Has a value if alpha versions are acceptable
+        self.rcOK = "" # Has a value if rc versions are acceptable
         self.regVenderName = "" #Name of the vendor in the registry
         self.regProgName = "" #Name of the program in the registry (defaults to programName)
         self.regVersLocations = ['''SOFTWARE\Wow6432Node''',
@@ -61,6 +63,7 @@ class Package:
         #These values are not read from the config file
         self.logger = logger
         self.currentVersion = "" #Currently installed version
+        self.versions = "" #List of versions found on the webpage
         self.latestVersion = "" #Latest verison online
         self.downloadedPath = "" #Path installer was downloaded to
         self.actualURL = "" #Actual URL that was downloaded (after redirects)
@@ -78,7 +81,7 @@ class Package:
             self.installDir = "C:\\Program Files"
 
         #Get the dependencies as a list
-        if self.dependencies != []:
+        if self.dependencies != [] and self.dependencies != "":
             exec "self.dependencies = " + self.dependencies
         
     def readConfig(self,logger):
@@ -126,9 +129,9 @@ class Package:
                 url = self.downloadURL
             elif self.url != "":
                 url = self.url
+            self.logger.debug("Scraping page: " + url + " with " + regex)
             versions = scrapePage(regex, url)
-            print self.versionRegex
-            print versions
+            self.logger.debug("Versions Found: " + str(versions))
             if self.betaOK == "":
                 versionsTemp = []
                 for version in versions:
@@ -186,16 +189,17 @@ class Package:
     def determineFileURL(self):
         """Helper function to determine the download url"""
         self.logger.debug("Determining download fileURL.")
-        if self.downloadLink != '':
-            self.downloadLink = self.parseVersionSyntax(self.downloadLink)
-            fileURL = self.downloadLink
-        elif self.downloadRegex != '':
+        self.downloadURL = self.parseVersionSyntax(self.downloadURL)
+        if self.downloadRegex != "":
             self.downloadRegex = self.parseDownloadRegex()
             fileURL = scrapePage(self.downloadRegex, self.downloadURL)[0]
-        else:
+        elif self.linkRegex != '':
             self.linkRegex = self.parseVersionSyntax(self.linkRegex)
             self.downloadURL = self.parseVersionSyntax(self.downloadURL)
+            self.logger.debug("Scraping: " + self.downloadURL + " with " + self.linkRegex + " for download link.")
             fileURL = parsePage(self.linkRegex, self.downloadURL)
+        else:
+            fileURL = self.downloadURL
         if not re.match(".*:.*", fileURL):
             #TODO: Fix this - It doesn't cover the case where the link is /foo/bar
             #Which should become: http://website.com/foo/bar
@@ -204,7 +208,6 @@ class Package:
             temp = self.downloadURL.split('/')[-1] # Find the last bit of downloadURL
             temp = self.downloadURL.rstrip(temp) # strip of everything up to /
             fileURL = temp + fileURL
-
         return fileURL
     
     def download(self, directory):
@@ -215,7 +218,11 @@ class Package:
             return self.downloadedPath
 
         #Otherwise Download file
-        fileURL = self.determineFileURL()
+        try:
+            fileURL = self.determineFileURL()
+        except:
+            self.logger.info("Unable to determine fileURL. This means the download link was not found when searching the page")
+            raise
         fileName = self.fileName()
 
         self.logger.debug("Attempting to download file from '" + fileURL + "' as: '" + fileName + "'")
