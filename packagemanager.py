@@ -2,6 +2,7 @@ import sys, os, traceback
 import ourlogging
 
 class PackageException(Exception):
+    """Exception wrapping class to attach package data"""
     def __init__(self, error, inner = None, packages = None, traceback = None):
         self.inner = inner
         self.packages = packages
@@ -9,6 +10,7 @@ class PackageException(Exception):
         Exception.__init__(self, error)
 
     def __str__(self):
+        """Prints a stack trace for the full exception we wrapped in this one"""
         if isinstance(self.packages, list):
             return Exception.__str__(self) + ": " + str(self.packages)
         elif self.inner != None and self.traceback != None:
@@ -25,7 +27,7 @@ class PackageManager():
 
         self.logger = ourlogging.otherLogger("Package Manager")
         
-        #load packages from directory, filter for actual package directories
+        #load all packages from directory, filter for actual package directories
         self.allPackNames = [filename for filename in os.listdir('.\\packages\\')]
         self.allPackNames = filter(lambda x: x[0] == '_' and x[1] != '_', self.allPackNames)
 
@@ -45,6 +47,7 @@ class PackageManager():
             #find packages which arn't in our list
             badPackages = list(set(packageList)-set(packNames))
 
+            #If there are bad packages throw an exception.
             if badPackages != []:
                 raise PackageException("Bad Packages", packages=badPackages)
         
@@ -53,9 +56,14 @@ class PackageManager():
 
     def _loadPackages(self, packNames):
         """This actually loads the packages, should never be called from outside this class"""
+        #Most of this is black magic
+        
         self.logger.debug("Importing 'packages' module.")
+
+        #Imports the packages folder, and the symbol for each package.
         __import__("packages", fromlist=packNames)
 
+        #Import each packag, and the class from that package.
         for packName in packNames:
             try:
                 self.logger.debug("Importing 'packages."+packName+"' module.")
@@ -63,6 +71,7 @@ class PackageManager():
             except Exception as inner:
                 raise PackageException("Package threw error during instantiation", inner, packName, sys.exc_info()[2])
 
+        #Gets and instantiates one of each of the package classes.
         self.logger.debug("Generating package objects.")
         self.packages = [getattr(getattr(sys.modules["packages." + packName], packName), packName)() for packName in packNames]
 

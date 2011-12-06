@@ -9,6 +9,8 @@ class Base():
         self.logger = None
 
     def InitArgParse(self):
+        """Intialize argparse stuff"""
+        #Add common arguments
         self.parser.add_argument('--debug', dest="debug",
                                 action='store_true',
                                 help="Enable debugging information")
@@ -23,15 +25,23 @@ class Base():
                                 help="The output log file.")
         
     def ParseArgs(self, args):
-        self.InitArgParse() 
+        """Setup and run argparse"""
+        #Intializes argparse
+        self.InitArgParse()
+        
+        #Parses and unpacks the args
         self.args = vars(self.parser.parse_args(args))
+
+        #Process configuration args
         self.PostParseArgs()
         
     def PostParseArgs(self):
+        """Performs configuration based on parsed args"""
         loggingConfig = {}
 
         #Set up logging
         if not ourlogging.configured:
+            #choose the correct level of logging
             if self.args['debug']:
                 loggingConfig['debugInfo'] = True
                 loggingConfig['consoleLevel'] = logging.DEBUG  
@@ -40,14 +50,19 @@ class Base():
             elif self.args['quiet'] == 2:
                 loggingConfig['consoleLevel'] = logging.ERROR
 
+            #set the log file
             loggingConfig['fileName'] = self.args['log-file']
 
+            #call the logging config file with the arguments we've set up.
             ourlogging.config(**loggingConfig)
 
+        #Setup our logger based off of the name of the command being run.
         self.logger = ourlogging.commandLogger(self.parser.prog)
         self.logger.debug("Logger created, starting logging now.")
         
     def Execute(self):
+        """Execute the command"""
+        #Blank for this abstract class
         pass
 
 
@@ -57,9 +72,11 @@ class BasePackageCommand(Base):
     def __init__(self, argument_parser = {}):
         Base.__init__(self, argument_parser)
         self.invertDefault = False
+        #Intialize the package manager, which this class wraps
         self.packageManager = packagemanager.PackageManager()
 
     def InitInvertAllPackages(self):
+        """Helper function for intializing packages"""
         self.invertDefault = True
         
     def InitArgParse(self):
@@ -75,8 +92,7 @@ class BasePackageCommand(Base):
     def PostParseArgs(self):
         Base.PostParseArgs(self)
 
-        #Set up package manager
-        
+        #Determines the list of packages we are proccessing.
         if self.args['all-except']:
             self.logger.debug("Loding all packages except: " + str(self.args['packages']))
             self.packageManager.LoadInversePackages(self.args['packages'])
@@ -91,10 +107,13 @@ class BasePackageCommand(Base):
                 self.logger.debug("Loading no packages.")
                 self.packageManager.LoadPackages([])
 
+
     def PreparePackage(self, package):
+        """Prepare a package to be used"""
         package.findLatestVersion()
 
     def ExecutePackages(self):
+        """Executes over all the packages, calling ExecutePackage on each package"""
         for package in self.packageManager.Packages():
             #This prepares the packages needed variables
             self.logger.debug("Preparing package '" + package.name() + "'.")
@@ -110,6 +129,7 @@ class BasePackageCommand(Base):
                 self.logger.debug("Full stacktrace:\n+" + "+".join(traceback.format_tb(sys.exc_info()[2])))
             
     def SortPackages(self, packages):
+        """Function to replace to add sorting"""
         return packages
     
     def Execute(self):
@@ -125,6 +145,7 @@ def AttachDownloadArgument(self):
                             help="Directory to download files to.")
 
 class AttachNoScrape(BasePackageCommand):
+    """Attaches scrape prevention to the command"""
     def InitArgParse(self):
         BasePackageCommand.InitArgParse(self)
         self.parser.add_argument('--no-scrape', dest="no-scrape",
