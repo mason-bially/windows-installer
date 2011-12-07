@@ -68,9 +68,10 @@ def flattenTag(tagList):
 def parsePage(reg, url):
     '''Takes in a url. Scans it for <a> tags (links) and returns the one that matches reg.'''
     try:
-        page = urllib2.urlopen(url)
-        soup = BeautifulSoup(page)
-        page.close()
+        f = urllib2.urlopen(url)
+        page = f.read()
+        soup = BeautifulSoup(str(page))
+        f.close()
     except urllib2.URLError:
         print 'Couldn not connect to and read from %s' % url
     except:
@@ -102,25 +103,34 @@ def parsePage(reg, url):
             return link
         else:
             baseURL = url
+            #Handle case where url is //foo.bar.com/absolute/path
+            #in this case we just need the protocol (http: ftp: etc)
+            if link[0:2] == "//":
+                baseURL = baseURL.split("/")[0]
+                return baseURL + link
             #Handle case where url is absolute /relative/to/server root
             if link[0] == "/":
                 baseURL = "/".join(baseURL.split("/")[:3])
                 return baseURL + link
             else: #Handle case where url is relative relative/to/current/path
+                if baseURL[-1] != "/":
+                    baseURL = "/".join(baseURL.split("/")[:-1]) + "/"
                 return baseURL + link
 
         
 def downloadFile(URL, directory, fileName):
     """Downloads a given URL to directory
     Returns a dict containing the downloadedPath and 
-    the url that was actually downloaded:
-    {'downloadedPath': downloadPath, 'actualURL': actualURL}"""
+    the url that was actually downloaded and
+    the header data associated with the request:
+    {'downloadedPath': downloadPath, 'actualURL': actualURL, 'info':info}"""
     try:
         f = urllib2.urlopen(URL)
         fileContents = f.read()
         actualURL = f.geturl()
         #Get the extension from the url we downloaded
         extension = "." + f.geturl().split(".")[-1]
+        info = f.info() #Get the content type and other header info
         f.close()
         #TODO: Clean up the following code, its kinda messy
         downloadpath = directory + '/' + fileName + extension
@@ -129,7 +139,7 @@ def downloadFile(URL, directory, fileName):
         with open(downloadpath, "wb") as downloadedFile:
             downloadedFile.write(fileContents)
         #TODO: End code to be cleaned
-        return {'downloadedPath':downloadpath, 'actualURL': actualURL}
+        return {'downloadedPath':downloadpath, 'actualURL': actualURL, 'info':info}
     except urllib2.HTTPError, e:
         print "ERROR DOWNLOADING: ", e.code, URL
         raise

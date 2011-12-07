@@ -237,9 +237,24 @@ class Package:
         fileName = self.fileName()
 
         self.logger.debug("Attempting to download file from '" + fileURL + "' as: '" + fileName + "'")
-        downloadedFilePath = downloadFile(fileURL, directory, fileName)['downloadedPath']
-        self.logger.debug("Finished downloading file to '" + downloadedFilePath + "'")
-        return downloadedFilePath
+        data = downloadFile(fileURL, directory, fileName) #download File and record data about download
+        downloadedFilePath = data['downloadedPath'] # Keep track of where file was downloaded
+        try:
+            #If the page returned by the link is not file but instead another page
+            #Then we need to delete our download and then try to find the file on
+            #The page that was returned. For example a download page takes you to a specific page
+            #for the file (that is html). msysgit is a good example of this. File links on the page
+            #are not strait to the file but are instead to another page that actually has the file
+            #Even though the link has the same text on the next page (just an extra click away)
+            if data['info']['Content-Type'].rfind("text/html") != -1:
+                self.downloadURL = data['actualURL']
+                os.remove(downloadedFilePath)
+                return self.download(directory)
+        except:
+            pass
+        else:
+            self.logger.debug("Finished downloading file to '" + downloadedFilePath + "'")
+            return downloadedFilePath
 
 
     def install(self, hideGui=True, downloadPath=""):
@@ -299,6 +314,8 @@ class Package:
             string = string.replace('#LOWERCASEVERSION#', self.latestVersion.lower())
         if (string.find("#UNDERSCOREVERSION#") != -1):
             string = string.replace('#UNDERSCOREVERSION#', self.latestVersion.replace('.','_'))
+        if (string.find("#REGEXVERSION#") != -1):
+            string = string.replace("#REGEXVERSION#", self.latestVersion.replace('.','.{0,1}'))
         return string
     
     def parseDownloadRegex(self):
