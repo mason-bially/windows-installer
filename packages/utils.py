@@ -1,7 +1,10 @@
 import urllib2
 import re
 import calendar
+import ourlogging
 from BeautifulSoup import BeautifulSoup
+
+logger = ourlogging.otherLogger("packages.util")
 
 def getPage(url):
     """Returns the contents of a url as a string.
@@ -16,9 +19,9 @@ def getPage(url):
         page = f.read()
         f.close()
     except urllib2.URLError:
-        print 'Couldn not connect to and read from %s' % url
+        logger.warning("Couldn't not connect to and read from %s" % url)
     except:
-        print 'unknown error running  getPage(%s)' % url
+        logger.warning('unknown error running  getPage(%s)' % url)
         raise
     else:
         return page
@@ -37,16 +40,16 @@ def scrapePage(reg, url):
         ret = re.findall(reg, getPage(url), re.IGNORECASE)
     except TypeError as strerror:
         if strerror == 'first argument must be a string or compiled pattern':
-            print 'you are missing or have an invalid regex in %s' % reg
+            logger.warning('you are missing or have an invalid regex in %s' % reg)
         elif strerror == 'expected string or buffer':
-            print 'your have no page being returned by getPage()'
-        print 'when calling scrapePage(%s, %s)' %(reg, url)
+            logger.warning('you have no page being returned by getPage()')
+        logger.warning('when calling scrapePage(%s, %s)' %(reg, url))
     except:
-        print 'unknown error running  scrapePage(%s, %s)' % (reg, url)
+        logger.warning('unknown error running  scrapePage(%s, %s)' % (reg, url))
         raise
     else:
         if ret == []:
-            print "No Matches for '%s' found on '%s'" % (reg, url)
+            logger.warning("No Matches for '%s' found on '%s'" % (reg, url))
             raise IndexError("No Matches found on page")
         return ret
         
@@ -73,9 +76,9 @@ def parsePage(reg, url):
         soup = BeautifulSoup(str(page))
         f.close()
     except urllib2.URLError:
-        print 'Couldn not connect to and read from %s' % url
+        logger.warning('Couldn not connect to and read from %s' % url)
     except:
-        print 'unknown error running  parsePage(%s)' % url
+        logger.warning('unknown error running  parsePage(%s)' % url)
         raise
     else:
         #use linkRegex to find useful links, possible downloads
@@ -90,8 +93,8 @@ def parsePage(reg, url):
                 correctLinks.append(item)
         if len(correctLinks) > 1:
             #TODO: Handle this error correctly (really is more of a warning, link could be repeated on page)
-            print "NOTE: More than one download link was found"
-            print correctLinks
+            logger.warning("More than one download link was found")
+            logger.info(correctLinks)
         link = correctLinks[0]['href']
         #The following code handles links correctly don't mess with
         #this unless you know what you are doing
@@ -141,10 +144,10 @@ def downloadFile(URL, directory, fileName):
         #TODO: End code to be cleaned
         return {'downloadedPath':downloadpath, 'actualURL': actualURL, 'info':info}
     except urllib2.HTTPError, e:
-        print "ERROR DOWNLOADING: ", e.code, URL
+        logger.error("ERROR DOWNLOADING: ", e.code, URL)
         raise
     except urllib2.URLError, e:
-        print "URL ERROR: " , e.reason, URL
+        logger.error("URL ERROR: " , e.reason, URL)
         raise
     
 

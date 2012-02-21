@@ -19,6 +19,9 @@ class Command(fetch.Command, command.BasePackageCommand):
                                 help="Skip fetching the installers. Missing installers will cause errors. Will attempt to use the latest local installer version."),
         
     def SortPackages(self, packages):
+        """Sorts packages based on whether they have a gui or not"""
+
+        #Choose the right operation based on the input command.
         if self.args['gui'] == 'first':
             sortedPackages = sorted(packages, key=lambda p: p.canHideGui())
         elif self.args['gui'] == 'last':

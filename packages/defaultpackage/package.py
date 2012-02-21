@@ -149,7 +149,8 @@ class Package:
             self.latestVersion = ret
             return ret
         except:
-            raise #PackageError('unknown error running getWebVersion()')
+            #raise PackageError('unknown error running findLatestVersion()')
+            return None
         else:
             return ret
 
